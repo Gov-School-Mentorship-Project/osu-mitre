@@ -59,7 +59,7 @@ Please make sure you have the following prerequisites:
 Clone the repository:
 
 ```shell
-git clone https://github.com/Gov-School-Mentorship-Project/osu-mitre
+git clone https://github.com/ppy/osu
 cd osu
 ```
 
