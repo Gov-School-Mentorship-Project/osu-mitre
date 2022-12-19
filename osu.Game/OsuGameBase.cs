@@ -83,6 +83,8 @@ namespace osu.Game
 
         public const int SAMPLE_CONCURRENCY = 6;
 
+        public const double SFX_STEREO_STRENGTH = 0.75;
+
         /// <summary>
         /// Length of debounce (in milliseconds) for commonly occuring sample playbacks that could stack.
         /// </summary>
@@ -262,6 +264,7 @@ namespace osu.Game
             dependencies.Cache(largeStore);
 
             dependencies.CacheAs(LocalConfig);
+            dependencies.CacheAs<IGameplaySettings>(LocalConfig);
 
             InitialiseFonts();
 
