@@ -301,6 +301,8 @@ namespace osu.Game.Overlays
 
             if (currentStepIndex < steps.Count)
             {
+                //if (currentStepIndex.Value > 0 && steps[currentStepIndex.Value - 1] == typeof(ScreenImportFromStable))
+                    CurrentScreen?.HidePopover(); // Closes the Directory Selector for importing from stable
                 var nextScreen = (Screen)Activator.CreateInstance(steps[currentStepIndex.Value]);
 
                 loadingShowDelegate = Scheduler.AddDelayed(() => loading.Show(), 200);
