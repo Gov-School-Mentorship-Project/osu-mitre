@@ -25,9 +25,9 @@ namespace osu.Game.Online.Placeholders
                 Action = () => Action?.Invoke()
             };
             animatedButton.Add(textFlow = new OsuTextFlowContainer(cp => cp.Font = cp.Font.With(size: TEXT_SIZE))
-                {
-                    AutoSizeAxes = Framework.Graphics.Axes.Both,
-                    Margin = new Framework.Graphics.MarginPadding(5)
+            {
+                AutoSizeAxes = Framework.Graphics.Axes.Both,
+                Margin = new Framework.Graphics.MarginPadding(5)
             });
 
             AddArbitraryDrawable(animatedButton);

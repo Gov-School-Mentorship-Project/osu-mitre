@@ -63,7 +63,8 @@ namespace osu.Game.Overlays.Changelog
             }
         }
 
-        protected virtual FillFlowContainer CreateHeader() {
+        protected virtual FillFlowContainer CreateHeader()
+        {
             OsuHoverContainer hoverContainer = new OsuHoverContainer
             {
                 Anchor = Anchor.Centre,
