@@ -43,6 +43,7 @@ namespace osu.Game.Graphics.Containers
                 content.RelativeSizeAxes = (Axes.Both & ~AutoSizeAxes);
                 content.AutoSizeAxes = AutoSizeAxes;
             }
+
             AddInternal(content);
             Add(CreateHoverSounds(sampleSet));
         }
@@ -50,7 +51,7 @@ namespace osu.Game.Graphics.Containers
         protected override void ClearInternal(bool disposeChildren = true) =>
             throw new InvalidOperationException($"Clearing {nameof(InternalChildren)} will cause critical failure.");
 
-        public override void Clear(bool disposeChildren = true) =>
+        public override void Clear(bool disposeChildren) =>
             throw new InvalidOperationException($"Clearing {nameof(Children)} will cause critical failure.");
     }
 }

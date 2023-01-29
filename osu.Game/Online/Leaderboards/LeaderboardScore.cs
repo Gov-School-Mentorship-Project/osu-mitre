@@ -98,7 +98,8 @@ namespace osu.Game.Online.Leaderboards
 
             ClickableAvatar innerAvatar;
 
-            AddRange(new Drawable[] {
+            AddRange(new Drawable[]
+            {
                 new RankLabel(rank)
                 {
                     RelativeSizeAxes = Axes.Y,
