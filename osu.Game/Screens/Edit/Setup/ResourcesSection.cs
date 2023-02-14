@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System.IO;
+using System.Text.RegularExpressions;
 using osu.Framework.Allocation;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics;
@@ -9,6 +10,7 @@ using osu.Framework.Localisation;
 using osu.Game.Beatmaps;
 using osu.Game.Overlays;
 using osu.Game.Localisation;
+using osu.Game.Graphics.UserInterfaceV2;
 
 namespace osu.Game.Screens.Edit.Setup
 {
@@ -16,6 +18,7 @@ namespace osu.Game.Screens.Edit.Setup
     {
         private LabelledFileChooser audioTrackChooser = null!;
         private LabelledFileChooser backgroundChooser = null!;
+        private LabelledTextBox remoteAudioTextBox = null!;
 
         public override LocalisableString Title => EditorSetupStrings.ResourcesHeader;
 
@@ -54,6 +57,7 @@ namespace osu.Game.Screens.Edit.Setup
                     FixedLabelWidth = LABEL_WIDTH,
                     TabbableContentContainer = this
                 },
+                remoteAudioTextBox = createTextBox<LabelledTextBox>(new LocalisableString("Remote Audio"), ""),
             };
 
             if (!string.IsNullOrEmpty(working.Value.Metadata.BackgroundFile))
@@ -64,9 +68,20 @@ namespace osu.Game.Screens.Edit.Setup
 
             backgroundChooser.Current.BindValueChanged(backgroundChanged);
             audioTrackChooser.Current.BindValueChanged(audioTrackChanged);
+            remoteAudioTextBox.Current.BindValueChanged(audioReference => remoteAudioChanged(audioReference.NewValue, remoteAudioTextBox));
 
             updatePlaceholderText();
         }
+
+        private TTextBox createTextBox<TTextBox>(LocalisableString label, string initialValue)
+            where TTextBox : LabelledTextBox, new()
+            => new TTextBox
+            {
+                Label = label,
+                FixedLabelWidth = LABEL_WIDTH,
+                Current = { Value = initialValue },
+                TabbableContentContainer = this
+            };
 
         public bool ChangeBackgroundImage(FileInfo source)
         {
@@ -142,6 +157,39 @@ namespace osu.Game.Screens.Edit.Setup
                 audioTrackChooser.Current.Value = file.OldValue;
 
             updatePlaceholderText();
+        }
+
+        private void remoteAudioChanged(string value, LabelledTextBox target)
+        {
+            value = value.Trim();
+            if (value == "" || validateRemoteAudio(value))
+            {
+                target.Colour = Colour4.White;
+            } else
+            {
+                target.Colour = new Colour4(0.95f, 0.45f, 0.45f, 1.0f);
+                // Could animate the box or something
+            }
+        }
+
+        private bool validateRemoteAudio(string value)
+        {
+            Regex uriMatch = new Regex(@"\G\s*spotify:track:[A-Za-z0-9]{22}\s*");
+            if (uriMatch.IsMatch(value))
+                return true;
+
+            Regex urlMatch = new Regex(@"\G\s*(http[s]?:\/\/)?open\.spotify\.com\/track/(?<id>[A-Za-z0-9]{22})([?](.+)?)?$");
+            Match m = urlMatch.Match(value);
+            return m.Success; // TODO: Add a way to change from uri to url
+
+            /*if (m.Success && m.Groups.TryGetValue("id", out Group? id))
+            {
+                uri = $"spotify:track:{id.Value}";
+                return true;
+            }
+            uri = "";
+            return false;
+            return false;*/
         }
 
         private void updatePlaceholderText()
