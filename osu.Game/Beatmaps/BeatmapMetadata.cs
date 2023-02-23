@@ -52,6 +52,7 @@ namespace osu.Game.Beatmaps
         public int PreviewTime { get; set; } = -1;
 
         public string AudioFile { get; set; } = string.Empty;
+        public string RemoteAudioReference { get; set; } = string.Empty;
         public string BackgroundFile { get; set; } = string.Empty;
 
         public BeatmapMetadata(RealmUser? user = null)

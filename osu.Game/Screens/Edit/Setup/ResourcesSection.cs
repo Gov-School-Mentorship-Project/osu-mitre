@@ -66,6 +66,9 @@ namespace osu.Game.Screens.Edit.Setup
             if (!string.IsNullOrEmpty(working.Value.Metadata.AudioFile))
                 audioTrackChooser.Current.Value = new FileInfo(working.Value.Metadata.AudioFile);
 
+            if (!string.IsNullOrEmpty(working.Value.Metadata.RemoteAudioReference))
+                remoteAudioTextBox.Current.Value = working.Value.Metadata.RemoteAudioReference;
+
             backgroundChooser.Current.BindValueChanged(backgroundChanged);
             audioTrackChooser.Current.BindValueChanged(audioTrackChanged);
             remoteAudioTextBox.Current.BindValueChanged(audioReference => remoteAudioChanged(audioReference.NewValue, remoteAudioTextBox));
@@ -162,34 +165,15 @@ namespace osu.Game.Screens.Edit.Setup
         private void remoteAudioChanged(string value, LabelledTextBox target)
         {
             value = value.Trim();
-            if (value == "" || validateRemoteAudio(value))
+            if (value == "" || RemoteBeatmapAudio.validateRemoteAudio(value))
             {
                 target.Colour = Colour4.White;
+                working.Value.Metadata.RemoteAudioReference = value;
             } else
             {
                 target.Colour = new Colour4(0.95f, 0.45f, 0.45f, 1.0f);
                 // Could animate the box or something
             }
-        }
-
-        private bool validateRemoteAudio(string value)
-        {
-            Regex uriMatch = new Regex(@"\G\s*spotify:track:[A-Za-z0-9]{22}\s*");
-            if (uriMatch.IsMatch(value))
-                return true;
-
-            Regex urlMatch = new Regex(@"\G\s*(http[s]?:\/\/)?open\.spotify\.com\/track/(?<id>[A-Za-z0-9]{22})([?](.+)?)?$");
-            Match m = urlMatch.Match(value);
-            return m.Success; // TODO: Add a way to change from uri to url
-
-            /*if (m.Success && m.Groups.TryGetValue("id", out Group? id))
-            {
-                uri = $"spotify:track:{id.Value}";
-                return true;
-            }
-            uri = "";
-            return false;
-            return false;*/
         }
 
         private void updatePlaceholderText()

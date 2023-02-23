@@ -151,6 +151,10 @@ namespace osu.Game.Beatmaps.Formats
                     metadata.AudioFile = pair.Value.ToStandardisedPath();
                     break;
 
+                case @"RemoteAudioReference":
+                    metadata.RemoteAudioReference = pair.Value;
+                    break;
+
                 case @"AudioLeadIn":
                     beatmap.BeatmapInfo.AudioLeadIn = Parsing.ParseInt(pair.Value);
                     break;
