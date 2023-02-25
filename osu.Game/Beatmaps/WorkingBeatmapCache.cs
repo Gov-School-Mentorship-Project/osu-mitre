@@ -215,6 +215,16 @@ namespace osu.Game.Beatmaps
                 }
             }
 
+            protected override Track GetRemoteTrack()
+            {
+                if (string.IsNullOrEmpty(Metadata.RemoteAudioReference))
+                {
+                    return null;
+                }
+
+                return new RemoteTrack(Metadata.RemoteAudioReference);
+            }
+
             protected override Waveform GetWaveform()
             {
                 if (string.IsNullOrEmpty(Metadata?.AudioFile))

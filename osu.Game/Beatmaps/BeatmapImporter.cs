@@ -372,6 +372,7 @@ namespace osu.Game.Beatmaps
                         Tags = decoded.Metadata.Tags,
                         PreviewTime = decoded.Metadata.PreviewTime,
                         AudioFile = decoded.Metadata.AudioFile,
+                        RemoteAudioReference = decoded.Metadata.RemoteAudioReference,
                         BackgroundFile = decoded.Metadata.BackgroundFile,
                     };
 
