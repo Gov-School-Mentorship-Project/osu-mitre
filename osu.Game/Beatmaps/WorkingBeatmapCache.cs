@@ -6,6 +6,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using JetBrains.Annotations;
 using osu.Framework.Audio;
 using osu.Framework.Audio.Track;
@@ -222,7 +223,7 @@ namespace osu.Game.Beatmaps
                     return null;
                 }
 
-                return new RemoteTrack(Metadata.RemoteAudioReference);
+                return RemoteBeatmapAudio.TrackFromReference(Metadata.RemoteAudioReference);
             }
 
             protected override Waveform GetWaveform()

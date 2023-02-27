@@ -7,22 +7,25 @@ using osu.Framework.Timing;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using osu.Framework.Logging;
+using EmbedIO;
+using EmbedIO.Actions;
+using EmbedIO.WebSockets;
 
 namespace osu.Game.Beatmaps
 {
     public class RemoteTrack : Track
     {
-        private readonly StopwatchClock referenceClock;
-        private string reference;
+        protected readonly StopwatchClock referenceClock;
+        protected string reference;
         public override bool IsRunning => referenceClock.IsRunning;
+
         public override double CurrentTime => referenceClock.CurrentTime;
 
         public RemoteTrack(string reference, string name = "remote")
             : base(name)
         {
-            this.reference = reference;
+            RemoteBeatmapAudio.validateRemoteAudio(reference, out this.reference);
             referenceClock = new StopwatchClock();
-            Logger.Log($"Loading Remote Audio From: {reference}");
             Length = 30000; // 30 seconds
         }
 
