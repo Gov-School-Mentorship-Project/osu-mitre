@@ -41,7 +41,11 @@ namespace osu.Game.Beatmaps
             Logger.Log("Creating Spotify Server!!!!");
             server = RemoteAudioServerFactory.CreateSpotifyServer("http://localhost:9999");
             server.RunAsync();
-            accessToken = "BQBpyqiGZqTBf0yVQkdKXl4jrvuTTjYmh3K50XfzpZNUoO4idQVLm_equoL_S5Y5NzU9HzZS3Z-92TpeWI00RDyEyxxs7EJIgt8eGGsG1eVK-I6D_NUxKRUJ_nRsszb5LRWN6FzXaed7LOufjlHRdTkQ31nt5tTATDCPXi7nCFgDvHBP6mTU7F3b0lmtuvWQZ3XFa6jrIVfuTcXp00xdrd0Z";
+            accessToken = "BQB-bovdawUibTgwyNkcAz4AdQ3vnAZLu8RNaiJEe1IgnX5ToBsp4o0KyD3uL6UeG7BN5GSyNAcO3e3RE-GvRPGX89RwaGbII8p-9rxdXH0vGkJdGYLJ_0Cq92leKVxhnOEhwhfxir1iMvGwbJ_HXR_7urFaclA2q2533HafNMNfN0I0QDmmNqOvLc1LodPkX0rv6zuRBVcjhzGQSntPVowK";
+        }
+
+        public static void Init()
+        {
         }
 
         public void TransferDevice(string deviceId)

@@ -33,10 +33,11 @@ namespace osu.Game.Overlays
             new GameplaySection(),
             new RulesetSection(),
             new AudioSection(),
+            new OAuthSection(),
             new GraphicsSection(),
             new OnlineSection(),
             new MaintenanceSection(),
-            new DebugSection(),
+            new DebugSection()
         };
 
         private readonly List<SettingsSubPanel> subPanels = new List<SettingsSubPanel>();
