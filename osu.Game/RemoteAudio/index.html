@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Spotify Web Playback SDK Quick Start</title>
+    <style>
+        * {
+            font-weight: 100;  
+            padding: 0; 
+            margin: 0;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        body {
+            height: 100%;
+            margin: 0;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-image: linear-gradient(to bottom right, rgba(89,79,78,255), rgba(24,24,24,255));
+            
+        }
+
+        img {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 40%;
+            margin-top: 40px;
+        }
+
+        h2 {
+            margin-left: 30%;
+            color: rgba(254,254,252,255);
+        }
+        
+        #progress {
+            width: 40%;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        p {
+            margin-left: 30%;
+            color: rgba(194,193,191,255);
+        }
+
+
+    </style>
+  </head>
+  <body>
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <script>
+
+    let httpUrl = "http://localhost:9999";
+    
+    window.onSpotifyWebPlaybackSDKReady = () => {
+        let token;
+        let readyToLoad;
+        let x;
+        fetch(httpUrl + "/token")
+        .then((res) => res.json())
+        .then((data) => {
+            token = data;
+            player.connect();
+            console.log("Connected with token: " + data);
+        })
+        .catch((err) => {
+            console.log("Server is not open yet: " + err);
+        })
+        
+        const player = new Spotify.Player({
+            name: 'Web Playback SDK Quick Start Player',
+            getOAuthToken: cb => {cb(token); }
+        });
+        console.log(player);
+        // Ready
+        player.addListener('ready', ({ device_id }) => {
+            console.log('Ready with Device ID', device_id);
+            fetch(httpUrl + "/device?id=" + device_id,
+            {
+                method: 'POST'
+            });
+        });
+
+        player.addListener('not_ready', ({ device_id }) => {
+            console.log('Device ID has gone offline', device_id);
+        });
+
+        player.addListener('initialization_error', ({ message }) => { 
+            console.error(message);
+        });
+
+        player.addListener('authentication_error', ({ message }) => {
+            console.error(message);
+        });
+
+        player.addListener('account_error', ({ message }) => {
+            console.error(message);
+        });
+
+        player.addListener("progress", (o) => {
+            document.getElementById("progress").value = o.position;
+            let minutes = Math.floor(o.position/60000)
+            let seconds = Math.floor((o.position % 60000)/1000);
+            document.getElementById("timer").innerText = minutes + ":" + seconds.toString().padStart(2, "0");
+        });
+
+        player.addListener("player_state_changed", (state => {
+            if (!state)
+                return;
+            
+            console.log("State Changed!!!!: ");
+            console.log(state);
+
+
+            let track = state.track_window.current_track;
+            document.getElementById("title").innerText = track.name;
+            let artists = "";
+            for (a in track.artists)
+            {
+                artists += track.artists[a].name + "\n";
+            }
+            document.getElementById("artist").innerText = artists;
+            document.getElementById("album").setAttribute("src", track.album.images[0].url);
+            bar = document.getElementById("progress");
+            bar.setAttribute("min", 0);
+            bar.setAttribute("max", track.duration_ms);
+
+            fetch(httpUrl 
+            + "/state?ms=" + state.position.toString() 
+            + "&timestamp=" + Date.now() 
+            + "&paused=" + state.paused, 
+            {
+                method: 'POST'
+            });
+        }));
+
+        document.getElementById('toggle').onclick = function() {
+            player.pause();
+            document.getElementById('interact').style.display = "none";
+            document.getElementById('content').style.display = "block";
+            fetch(httpUrl + "/interact", {
+                method: 'POST'
+            });
+        };
+    }
+
+
+
+
+    </script> 
+    <div id="content" style="display: none">
+        <img src="loading.webp" id="album" alt="album cover"/>
+        <h2 id="title"></h2>
+        <p id="artist"></p>
+        <input type="range" id="progress"/>
+        <p id="timer"></p>
+    </div>
+    <div id="interact">
+        <button id="toggle">Click to get started!</button>
+    </div>
+  </body>
+</html>

@@ -1,8 +1,9 @@
 using System.Linq;
 using System;
 using System.Collections.Generic;
+using osu.Game.Beatmaps.RemoteAudio;
 
-namespace osu.Game.Beatmaps
+namespace osu.Game.RemoteAudio
 {
     public static class RemoteBeatmapAudio
     {

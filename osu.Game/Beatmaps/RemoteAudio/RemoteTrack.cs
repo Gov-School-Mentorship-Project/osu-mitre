@@ -10,8 +10,9 @@ using osu.Framework.Logging;
 using EmbedIO;
 using EmbedIO.Actions;
 using EmbedIO.WebSockets;
+using osu.Game.RemoteAudio;
 
-namespace osu.Game.Beatmaps
+namespace osu.Game.Beatmaps.RemoteAudio
 {
     public class RemoteTrack : Track
     {

@@ -1,10 +1,9 @@
 using osu.Framework.Logging;
 using EmbedIO;
 using EmbedIO.Actions;
-using System;
 
 
-namespace osu.Game.Beatmaps
+namespace osu.Game.RemoteAudio
 {
     public static class RemoteAudioServerFactory // TODO: Make this not a factory
     {
@@ -29,7 +28,7 @@ namespace osu.Game.Beatmaps
                     throw new HttpException(400);
 
                 SpotifyManager.Instance.deviceId = deviceId;
-                Logger.Log($"Device ID Received: {deviceId}");
+                Logger.Log($"Device ID Received: {deviceId} from SpotifyServer");
                 SpotifyManager.Instance.TransferDevice(deviceId);
                 return ctx.SendDataAsync("");
             });
@@ -39,7 +38,7 @@ namespace osu.Game.Beatmaps
         {
             return new ActionModule("/token", HttpVerbs.Get, (ctx) =>
             {
-                Logger.Log("Sending access token");
+                Logger.Log("Sending access token from SpotifyServer");
                 if (SpotifyManager.Instance.accessToken == null)
                     throw new HttpException(404);
 
@@ -51,8 +50,9 @@ namespace osu.Game.Beatmaps
         {
             return new ActionModule("/state", HttpVerbs.Post, (ctx) =>
             {
-                var query = ctx.Request.QueryString;
+                Logger.Log("Received State From SpotifyServer");
 
+                var query = ctx.Request.QueryString;
                 if (query[2] == null)
                     throw new HttpException(400);
 

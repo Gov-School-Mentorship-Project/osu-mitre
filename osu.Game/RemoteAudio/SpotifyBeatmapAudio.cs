@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace osu.Game.Beatmaps
+namespace osu.Game.RemoteAudio
 {
     static class SpotifyBeatmapAudio // I wish there were a way to make this inherit from a super class to handle all RemoteAudio stuff
     {
@@ -23,17 +23,6 @@ namespace osu.Game.Beatmaps
 
             convertedReference = "";
             return false;
-
-
-            /*if (m.Success && m.Groups.TryGetValue("id", out Group? id))
-            {
-                uri = $"spotify:track:{id.Value}";
-                return true;
-            }
-            uri = "";
-            return false;
-            return false;*/
-
         }
     }
 }

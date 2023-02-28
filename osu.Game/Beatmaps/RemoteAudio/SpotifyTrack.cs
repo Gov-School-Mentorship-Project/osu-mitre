@@ -9,25 +9,19 @@ using System.Diagnostics;
 using osu.Framework.Logging;
 using EmbedIO;
 using EmbedIO.Actions;
+using osu.Game.RemoteAudio;
 
-namespace osu.Game.Beatmaps
+namespace osu.Game.Beatmaps.RemoteAudio
 {
     public sealed class SpotifyTrack : RemoteTrack
     {
         public override bool IsRunning => running;
         private bool running = false;
+        //private bool readyInWebSdk = false;
         public  bool pendingStateUpdate = false; // Todo: Make this get updated by changing the times
 
         public DateTimeOffset start = DateTimeOffset.Now; // time at which track started (updates after pauses)
-        //public override double CurrentTime => DateTimeOffset.Now.Subtract(start).TotalMilliseconds;
-        public override double CurrentTime
-        {
-            get
-            {
-                Logger.Log($"Getting CurrentTime: {DateTimeOffset.Now.Subtract(start).TotalMilliseconds}");
-                return DateTimeOffset.Now.Subtract(start).TotalMilliseconds;
-            }
-        }
+        public override double CurrentTime => DateTimeOffset.Now.Subtract(start).TotalMilliseconds;
 
         public double currentTime {
             set {
@@ -35,34 +29,22 @@ namespace osu.Game.Beatmaps
             }
         }
 
-        //public double pausedTime = 0; // Is this even necessary
-
         public SpotifyTrack(string reference, string name = "spotify")
             : base(reference, name)
         {
-            Logger.Log($"Playing Spotify Track: {reference}");
+            Logger.Log($"Creating Track: {reference}");
             Length = 30000; // 30 seconds
 
-            // Get authorization from RemoteAudioManager here
-            /*SpotifyClientConfig? config = Authorize.CheckForAuthorization();
-            if (config == null)
-                config = Authorize.Pkce();
-
-            log.Info($"Creating Player with token {Authorize.accessToken}");*/
-
-            // perhaps it could pull this spotify object from the Singleton SpotifyAudioManager : RemoteAudioManager
-
-            //spotify = new SpotifyClient(config);
-            //log.Info($"Logged in as {spotify.UserProfile.Current().Result.DisplayName}");
-            // Before allowing this to be created, make sure that OAuth is valid and RemoteAudioManager can carry out our wishes
+            SpotifyManager.Instance.Play(reference); // TODO: Figure out where begin the web player
+            //readyInWebSdk = true;
         }
 
-        public override bool Seek(double seek) // TODO: figure out why it calls Seek() so many times
+        public override bool Seek(double seek)
         {
-            if (pendingStateUpdate)
+            if (pendingStateUpdate || seek < 0)
                 return false;
 
-            Logger.Log($"Seek to {seek}!!");
+            Logger.Log($"Seeking to {seek} from SpotifyTrack at {CurrentTime}!!");
 
             pendingStateUpdate = true;
             currentTime = seek;
@@ -74,14 +56,10 @@ namespace osu.Game.Beatmaps
 
         public override void Start()
         {
-            //if (pendingStateUpdate)
-                //return;
-
-            Logger.Log($"Start Track!!");
+            Logger.Log($"Starting track {reference} from SpotifyTrack at {CurrentTime}!!");
 
             currentTime = 0;
             pendingStateUpdate = true;
-            //running = true;
 
             SpotifyManager.Instance.currentTrack = this;
             SpotifyManager.Instance.Play(reference);
@@ -95,10 +73,7 @@ namespace osu.Game.Beatmaps
 
         public override void Reset()
         {
-            //if (pendingStateUpdate)
-                //return;
-
-            Logger.Log("Reset Track!");
+            Logger.Log("Reseting Track {reference} from SpotifyTrack at {CurrentTime}");
 
             pendingStateUpdate = true;
             Seek(0);
@@ -109,7 +84,7 @@ namespace osu.Game.Beatmaps
         {
             if (IsRunning && pendingStateUpdate)
             {
-                Logger.Log($"Stop Track!!");
+                Logger.Log("Stopping Track {reference} from SpotifyTrack at {CurrentTime}");
 
                 //running = false;
                 pendingStateUpdate = true;
@@ -119,9 +94,9 @@ namespace osu.Game.Beatmaps
 
         public void StateUpdate(long timestamp, long progress, bool paused)
         {
-            Logger.Log($"State Updated: {timestamp} {start} {CurrentTime}");
-
+            Logger.Log($"State Updated from {CurrentTime} to");
             start = DateTimeOffset.FromUnixTimeMilliseconds(timestamp - progress);
+            Logger.Log($"{CurrentTime} which should be {progress}");
             running = paused;
             pendingStateUpdate = false;
         }

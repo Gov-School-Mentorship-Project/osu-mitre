@@ -24,6 +24,7 @@ using osu.Game.Database;
 using osu.Game.IO;
 using osu.Game.Skinning;
 using osu.Game.Storyboards;
+using osu.Game.RemoteAudio;
 
 namespace osu.Game.Beatmaps
 {
