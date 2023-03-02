@@ -9,42 +9,27 @@ using osu.Game.Overlays.Settings.Sections.General;
 using osu.Game.RemoteAudio;
 using System;
 using System.IO;
+using osu.Framework.Bindables;
+using osu.Game.Graphics.UserInterface;
+using osu.Game.Configuration;
+using osu.Game.Overlays.Settings.Sections.RemoteAudio;
 
 namespace osu.Game.Overlays.Settings.Sections
 {
-    public partial class OAuthSection : SettingsSection
+    public partial class RemoteAudioSection : SettingsSection
     {
-        [Resolved(CanBeNull = true)]
-        private OsuGame? game { get; set; }
-
-
-        //public override LocalisableString Header => OAuthSettingsStrings.OAuthSectionHeader;
-
         public override LocalisableString Header => new LocalisableString("Remote Audio");
         public override Drawable CreateIcon() => new SpriteIcon
         {
-            Icon = FontAwesome.Brands.Spotify
+            Icon = FontAwesome.Solid.Music
         };
 
         [BackgroundDependencyLoader]
-        private void load(OsuColour colours)
+        private void load()
         {
             Children = new Drawable[]
             {
-                new SettingsButton
-                {
-                    Text = new LocalisableString("Open Webpage"),
-                    //Keywords = new[] { @"webpage", @"initial", @"getting started" },
-                    //TooltipText = FirstRunSetupOverlayStrings.FirstRunSetupDescription,
-                    Action = OpenWebSDK
-                },
-                new SettingsButton
-                {
-                    Text = new LocalisableString("OAuth"),
-                    //TooltipText = GeneralSettingsStrings.LearnMoreAboutLazerTooltip,
-                    BackgroundColour = colours.YellowDark,
-                    Action = () => SpotifyManager.Init(),
-                },
+                new SpotifySettings()
             };
         }
 

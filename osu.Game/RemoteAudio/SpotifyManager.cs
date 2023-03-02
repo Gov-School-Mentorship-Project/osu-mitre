@@ -8,6 +8,8 @@ using osu.Game.Beatmaps.RemoteAudio;
 using osu.Framework.Allocation;
 using osu.Game.Overlays.Notifications;
 using osu.Game.Overlays;
+using osu.Game.Online.API;
+using osu.Framework.Bindables;
 
 namespace osu.Game.RemoteAudio
 {
@@ -46,7 +48,7 @@ namespace osu.Game.RemoteAudio
         {
             server = RemoteAudioServerFactory.CreateSpotifyServer("http://localhost:9999");
             server.RunAsync();
-            accessToken = "BQBKmYmCq-Y2FGpncb7n7ZpO3MnfH6A9f4xf5nUcqIuhJ6y9YiJulJsR-Bbg4HBZgjmQxrWxAQSLICDUA5rDw8ugaAecPwzJEPUpku3TRRYPnYnp3l3Rsyb2xcEqobfu-6Yh9PpEhgkO-NFo0awV4bUD4p4U7eHaS_9Sy38Wbn6SYve8FeDfwRWW18Hu8s0FnkoQVInRQoUhWwZ8uscnVq0M";
+            accessToken = "BQDlJu9dix6JeChGjj8Sh4qchOYgU91bYZ1WxXTvo6phr-UCZ4FxP8jNO_otcnijRbAblqv15Pr1plWYm56AHLxC7vlT8pMiVw-d3v1Y-_Buhe63LboJWdY_SRWBLoUrKhokB4hM4JjZCVsYemf-F4cdhNWy0mPxYfIuVTBlFV3AOxg4-VEACYSmnVkg58GJbLOMwyLkwuwctNvINqtGvsw4";
             Logger.Log($"Created Spotify Server with accessToken from SpotifyManager");
         }
 
@@ -110,5 +112,19 @@ namespace osu.Game.RemoteAudio
             spotify.Player.SeekTo(new PlayerSeekToRequest(Math.Clamp(ms, 0, (long)(currentTrack?.Length ?? 60000))));
         }
 
+        public void OAuth(string clientId, string clientSecret)
+        {
+            OAuth authentication = new OAuth(clientId, clientSecret, "https://api.spotify.com/v1");
+            Logger.Log($"Authorize with OAuth! id: {clientId}, secret: {clientSecret}");
+            //authentication.TokenString = config.Get<string>(OsuSetting.Token);
+            authentication.Token.ValueChanged += onTokenChanged;
+            authentication.RequestAccessToken();
+        }
+
+        private void onTokenChanged(ValueChangedEvent<OAuthToken> e) {
+            Logger.Log($"Got Access Token: {e.NewValue.AccessToken}");
+            Instance.accessToken = e.NewValue.AccessToken;
+            //config.SetValue(OsuSetting.Token, config.Get<bool>(OsuSetting.SavePassword) ? authentication.TokenString : string.Empty)
+        }
     }
 }

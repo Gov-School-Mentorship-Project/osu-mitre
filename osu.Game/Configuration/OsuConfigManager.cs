@@ -96,6 +96,11 @@ namespace osu.Game.Configuration
 
             SetDefault(OsuSetting.AudioOffset, 0, -500.0, 500.0, 1);
 
+            // Remote Audio
+
+            SetDefault(OsuSetting.RemoteAudioSpotifyClientId, string.Empty);
+            SetDefault(OsuSetting.RemoteAudioSpotifyClientSecret, string.Empty);
+
             // Input
             SetDefault(OsuSetting.MenuCursorSize, 1.0f, 0.5f, 2f, 0.01f);
             SetDefault(OsuSetting.GameplayCursorSize, 1.0f, 0.1f, 2f, 0.01f);
@@ -383,5 +388,7 @@ namespace osu.Game.Configuration
         SafeAreaConsiderations,
         ComboColourNormalisationAmount,
         ProfileCoverExpanded,
+        RemoteAudioSpotifyClientId,
+        RemoteAudioSpotifyClientSecret
     }
 }

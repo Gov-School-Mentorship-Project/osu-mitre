@@ -33,7 +33,7 @@ namespace osu.Game.Overlays
             new GameplaySection(),
             new RulesetSection(),
             new AudioSection(),
-            new OAuthSection(),
+            new RemoteAudioSection(),
             new GraphicsSection(),
             new OnlineSection(),
             new MaintenanceSection(),
