@@ -42,6 +42,7 @@
     <PackageReference Include="SharpCompress" Version="0.32.2" />
     <PackageReference Include="NUnit" Version="3.13.3" />
     <PackageReference Include="SpotifyAPI.Web" Version="7.0.0" />
+    <PackageReference Include="SpotifyAPI.Web.Auth" Version="7.0.0" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.4" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageReference Include="TagLibSharp" Version="2.3.0" />

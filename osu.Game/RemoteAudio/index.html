@@ -52,14 +52,14 @@
   </head>
   <body>
     <script src="https://sdk.scdn.co/spotify-player.js"></script>
-    <script>
+    <script defer>
 
     let httpUrl = "http://localhost:9999";
     
     window.onSpotifyWebPlaybackSDKReady = () => {
+
+        // Get the token from the main program API
         let token;
-        let readyToLoad;
-        let x;
         fetch(httpUrl + "/token")
         .then((res) => res.json())
         .then((data) => {
@@ -69,14 +69,15 @@
         })
         .catch((err) => {
             console.log("Server is not open yet: " + err);
-        })
+        });
         
+        // Use token to create the Spotify player
         const player = new Spotify.Player({
             name: 'Web Playback SDK Quick Start Player',
             getOAuthToken: cb => {cb(token); }
         });
-        console.log(player);
-        // Ready
+
+        // Webpage is registered as a device
         player.addListener('ready', ({ device_id }) => {
             console.log('Ready with Device ID', device_id);
             fetch(httpUrl + "/device?id=" + device_id,
@@ -85,6 +86,7 @@
             });
         });
 
+        // erorrs
         player.addListener('not_ready', ({ device_id }) => {
             console.log('Device ID has gone offline', device_id);
         });
@@ -101,6 +103,7 @@
             console.error(message);
         });
 
+        // Playback events
         player.addListener("progress", (o) => {
             document.getElementById("progress").value = o.position;
             let minutes = Math.floor(o.position/60000)
@@ -108,27 +111,45 @@
             document.getElementById("timer").innerText = minutes + ":" + seconds.toString().padStart(2, "0");
         });
 
+        // connect to the socket 
+        var ws = new WebSocket("ws://localhost:9999/connect")
+
+        ws.addEventListener('message', (m) => {
+            let data = m.data.split(":");
+            switch (data[0])
+            {
+                case 'play':
+                    let uri = data[1]; 
+                    console.log("Don't know what to do with this " + data);
+                    break;
+                case 'seek':
+                    let ms = parseInt(data[1]);
+                    player.seek(ms).then(() => {
+                        console.log("seek to " + ms + "!");
+                    });
+                    break;
+                case 'pause':
+                    player.pause().then(() => {
+                        console.log("paused!");
+                    });
+                    break;
+                case 'resume':
+                    player.resume().then(() => {
+                        console.log("resumed!");
+                    });
+                    break;
+                default:
+                    console.log("invalid web socket message", m.data);
+            }
+        });
+        console.log(ws);
+
+        // State changed! Update the UI and send the state to the main program via http request
         player.addListener("player_state_changed", (state => {
             if (!state)
                 return;
-            
-            console.log("State Changed!!!!: ");
-            console.log(state);
 
-
-            let track = state.track_window.current_track;
-            document.getElementById("title").innerText = track.name;
-            let artists = "";
-            for (a in track.artists)
-            {
-                artists += track.artists[a].name + "\n";
-            }
-            document.getElementById("artist").innerText = artists;
-            document.getElementById("album").setAttribute("src", track.album.images[0].url);
-            bar = document.getElementById("progress");
-            bar.setAttribute("min", 0);
-            bar.setAttribute("max", track.duration_ms);
-
+            // Send state to main program
             fetch(httpUrl 
             + "/state?ms=" + state.position.toString() 
             + "&timestamp=" + Date.now() 
@@ -136,11 +157,34 @@
             {
                 method: 'POST'
             });
+
+            // Update UI
+            let track = state.track_window.current_track;
+
+            let bar = document.getElementById("progress");
+            bar.setAttribute("min", 0);
+            bar.setAttribute("max", track.duration_ms);
+
+            let artists = "";
+            for (let a in track.artists)
+            {
+                artists += track.artists[a].name + "\n";
+            }
+            let titleElem = document.getElementById("title");
+            let artistElem = document.getElementById("artist");
+            if (titleElem.innerText == track && artistElem.innerText == artists) // ensure that the image does not get unnecessarily refreshed
+                return;
+
+            titleElem.innerText = track.name;
+            artistElem.innerText = artists;
+            document.getElementById("album").setAttribute("src", track.album.images[0].url);
+
         }));
 
-        document.getElementById('toggle').onclick = function() {
+
+        document.getElementById('interact').onclick = function() {
             player.pause();
-            document.getElementById('interact').style.display = "none";
+            document.getElementById('interactContainer').style.display = "none";
             document.getElementById('content').style.display = "block";
             fetch(httpUrl + "/interact", {
                 method: 'POST'
@@ -148,10 +192,8 @@
         };
     }
 
-
-
-
     </script> 
+    
     <div id="content" style="display: none">
         <img src="loading.webp" id="album" alt="album cover"/>
         <h2 id="title"></h2>
@@ -159,8 +201,8 @@
         <input type="range" id="progress"/>
         <p id="timer"></p>
     </div>
-    <div id="interact">
-        <button id="toggle">Click to get started!</button>
+    <div id="interactContainer">
+        <button id="interact">Click to get started!</button>
     </div>
   </body>
 </html>

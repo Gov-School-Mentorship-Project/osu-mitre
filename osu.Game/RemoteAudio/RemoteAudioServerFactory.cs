@@ -7,9 +7,10 @@ namespace osu.Game.RemoteAudio
 {
     public static class RemoteAudioServerFactory // TODO: Make this not a factory
     {
-        public static WebServer CreateSpotifyServer(string url)
+        public static (WebServer, ClientWebSocket) CreateSpotifyServer(string url)
         {
-            return new WebServer(o => o
+            ClientWebSocket socket = new ClientWebSocket();
+            WebServer server =  new WebServer(o => o
                 .WithUrlPrefix(url)
                 .WithMode(HttpListenerMode.EmbedIO))
                 .WithLocalSessionManager()
@@ -17,7 +18,9 @@ namespace osu.Game.RemoteAudio
                 .WithModule(CreateStateHandler())
                 .WithModule(CreateDeviceHandler())
                 .WithModule(CreateAuthTokenHandler())
-                .WithModule(CreateInteractionHandler()); // TODO: Remove this one here and in JS
+                .WithModule(CreateInteractionHandler())
+                .WithModule(socket);
+                return (server, socket);
         }
         static ActionModule CreateDeviceHandler()
         {
@@ -38,7 +41,7 @@ namespace osu.Game.RemoteAudio
         {
             return new ActionModule("/token", HttpVerbs.Get, (ctx) =>
             {
-                Logger.Log("Sending access token from SpotifyServer");
+                Logger.Log($"Sending access token from SpotifyServer: {SpotifyManager.Instance.accessToken}");
                 if (SpotifyManager.Instance.accessToken == null)
                     throw new HttpException(404);
 
