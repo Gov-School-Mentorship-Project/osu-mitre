@@ -84,7 +84,10 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
             if (wd == null)
                 return;
 
-            string path = System.IO.Path.Combine(wd.FullName, "osu.Game/RemoteAudio/index.html");
+            string[] paths = new String[] {System.IO.Directory.GetCurrentDirectory(), "osu.Game", "RemoteAudio", "index.html"};
+            string path = System.IO.Path.Combine(paths);
+            
+            Logger.Log(path);
             var p = new System.Diagnostics.Process();
             p.StartInfo = new System.Diagnostics.ProcessStartInfo(path)
             {
