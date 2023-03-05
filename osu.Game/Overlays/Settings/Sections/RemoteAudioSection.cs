@@ -25,7 +25,7 @@ namespace osu.Game.Overlays.Settings.Sections
         };
 
         [BackgroundDependencyLoader]
-        private void load()
+        private void load(INotificationOverlay notifications)
         {
             Children = new Drawable[]
             {

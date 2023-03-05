@@ -14,6 +14,7 @@ using osu.Game.Overlays;
 using osu.Game.Online.API;
 using osu.Framework.Bindables;
 using System.Threading.Tasks;
+using osu.Framework.Graphics.Sprites;
 
 namespace osu.Game.RemoteAudio
 {
@@ -121,7 +122,7 @@ namespace osu.Game.RemoteAudio
             socket.SeekTo(ms);
         }
 
-        public async void OAuth(string clientId, string clientSecret)
+        public async void OAuth(string clientId, string clientSecret, INotificationOverlay notifications)
         {
             // Osu system doesn't work without username + password
             /*OAuth authentication = new OAuth(clientId, clientSecret, "https://api.spotify.com/v1");
@@ -181,6 +182,13 @@ namespace osu.Game.RemoteAudio
             Logger.Log("Stopping Server");
             await server.Stop().ConfigureAwait(false);
             Logger.Log("after stopping server!");
+
+            string spotifyUsername = (await spotify.UserProfile.Current().ConfigureAwait(false)).DisplayName;
+            notifications.Post(new SimpleNotification
+            {
+                Text = $"Successfully connected to Spotify account: {spotifyUsername}",
+                Icon = FontAwesome.Solid.Music,
+            });
         }
 
         static async Task<string> WaitForCode(EmbedIOAuthServer server, CancellationToken cancellationToken)

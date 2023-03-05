@@ -16,16 +16,18 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
 {
     public partial class SpotifySettings : SettingsSubsection
     {
-        [Resolved(CanBeNull = true)]
-        private OsuGame? game { get; set; }
+        //[Resolved(CanBeNull = true)]
+        //private OsuGame? game { get; set; }
+        private INotificationOverlay notificationOverlay = null!;
 
         protected override LocalisableString Header => new LocalisableString("Spotify");
 
         [BackgroundDependencyLoader]
-        private void load(OsuConfigManager config)
+        private void load(OsuConfigManager config, INotificationOverlay notifications)
         {
             Bindable<string> clientId = config.GetBindable<string>(OsuSetting.RemoteAudioSpotifyClientId);
             Bindable<string> clientSecret = config.GetBindable<string>(OsuSetting.RemoteAudioSpotifyClientSecret);
+            notificationOverlay = notifications;
 
             Children = new Drawable[]
             {
@@ -40,7 +42,7 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
                 {
                     Text = new LocalisableString("OAuth"),
                     TooltipText = "Connect with your Spotify account",
-                    Action = () => SpotifyManager.Instance.OAuth(clientId.Value, clientSecret.Value),
+                    Action = () => SpotifyManager.Instance.OAuth(clientId.Value, clientSecret.Value, notificationOverlay),
                 },
                 new SettingsButton
                 {
