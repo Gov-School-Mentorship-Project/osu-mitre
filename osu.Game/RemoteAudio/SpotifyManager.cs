@@ -167,8 +167,8 @@ namespace osu.Game.RemoteAudio
             PKCETokenRequest initialRequest = new PKCETokenRequest(clientId, code, baseUri, verifier);
             PKCETokenResponse initialResponse = await new OAuthClient().RequestToken(initialRequest).ConfigureAwait(false);
 
-            Logger.Log("got access token");
             accessToken = initialResponse.AccessToken;
+            Logger.Log($"got access token: {initialResponse.AccessToken}");
             //SaveAuthorization(initialResponse);
             var authenticator = new PKCEAuthenticator(clientId, initialResponse);
             /*authenticator.TokenRefreshed += (sender, response) =>
@@ -183,7 +183,7 @@ namespace osu.Game.RemoteAudio
             Logger.Log("after stopping server!");
         }
 
-        static Task<string> WaitForCode(EmbedIOAuthServer server, CancellationToken cancellationToken)
+        static async Task<string> WaitForCode(EmbedIOAuthServer server, CancellationToken cancellationToken)
         {
             /* used to listen for when the server's
             AuthorizationCodeReceived event is called */
@@ -207,9 +207,10 @@ namespace osu.Game.RemoteAudio
 
             cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken));
 
+            string code = await tcs.Task.ConfigureAwait(false);
             //string code = tcs.Task.GetResultSafely(); // wait for the server to receive the code
             server.AuthorizationCodeReceived -= handler;
-            return tcs.Task;
+            return code;
         }
 
         /*private void onTokenChanged(ValueChangedEvent<OAuthToken> e) {
