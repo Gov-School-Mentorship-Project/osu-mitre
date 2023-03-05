@@ -42,11 +42,11 @@ namespace osu.Game.RemoteAudio
         {
             return new ActionModule("/token", HttpVerbs.Get, (ctx) =>
             {
-                Logger.Log($"Sending access token from SpotifyServer: {SpotifyManager.Instance.accessToken}");
-                if (SpotifyManager.Instance.accessToken == null)
+                if (SpotifyManager.Instance.Token == null)
                     throw new HttpException(404);
 
-                return ctx.SendDataAsync(SpotifyManager.Instance.accessToken);
+                Logger.Log($"Sending access token from SpotifyServer: {SpotifyManager.Instance.Token.AccessToken}");
+                return ctx.SendDataAsync(SpotifyManager.Instance.Token.AccessToken);
             });
         }
 

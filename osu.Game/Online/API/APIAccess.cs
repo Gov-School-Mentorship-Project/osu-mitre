@@ -23,6 +23,7 @@ using osu.Game.Online.API.Requests.Responses;
 using osu.Game.Online.Notifications;
 using osu.Game.Online.Notifications.WebSocket;
 using osu.Game.Users;
+using osu.Game.Online.API.OAuthMethods;
 
 namespace osu.Game.Online.API
 {
@@ -32,7 +33,7 @@ namespace osu.Game.Online.API
 
         private readonly string versionHash;
 
-        private readonly OAuth authentication;
+        private readonly OAuthOsu authentication;
 
         private readonly Queue<APIRequest> queue = new Queue<APIRequest>();
 
@@ -72,7 +73,7 @@ namespace osu.Game.Online.API
             APIEndpointUrl = endpointConfiguration.APIEndpointUrl;
             WebsiteRootUrl = endpointConfiguration.WebsiteRootUrl;
 
-            authentication = new OAuth(endpointConfiguration.APIClientID, endpointConfiguration.APIClientSecret, APIEndpointUrl);
+            authentication = new OAuthOsu(endpointConfiguration.APIClientID, endpointConfiguration.APIClientSecret, APIEndpointUrl);
             log = Logger.GetLogger(LoggingTarget.Network);
 
             ProvidedUsername = config.Get<string>(OsuSetting.Username);

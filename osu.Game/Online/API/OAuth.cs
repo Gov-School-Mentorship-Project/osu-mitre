@@ -11,11 +11,11 @@ using osu.Framework.Bindables;
 
 namespace osu.Game.Online.API
 {
-    public class OAuth
+    public abstract class OAuth
     {
-        private readonly string clientId;
-        private readonly string clientSecret;
-        private readonly string endpoint;
+        protected readonly string clientId;
+        protected readonly string clientSecret;
+        protected readonly string endpoint;
 
         public readonly Bindable<OAuthToken> Token = new Bindable<OAuthToken>();
 
@@ -36,7 +36,7 @@ namespace osu.Game.Online.API
             this.endpoint = endpoint;
         }
 
-        internal void AuthenticateWithLogin(string username, string password)
+        /*internal void AuthenticateWithLogin(string username, string password)
         {
             if (string.IsNullOrEmpty(username)) throw new ArgumentException("Missing username.");
             if (string.IsNullOrEmpty(password)) throw new ArgumentException("Missing password.");
@@ -77,7 +77,7 @@ namespace osu.Game.Online.API
 
                 Token.Value = accessTokenRequest.ResponseObject;
             }
-        }
+        }*/
 
         internal bool AuthenticateWithRefresh(string refresh)
         {
@@ -148,7 +148,7 @@ namespace osu.Game.Online.API
             Token.Value = null;
         }
 
-        private class AccessTokenRequestRefresh : AccessTokenRequest
+        protected class AccessTokenRequestRefresh : AccessTokenRequest
         {
             internal readonly string RefreshToken;
 
@@ -166,7 +166,7 @@ namespace osu.Game.Online.API
             }
         }
 
-        private class AccessTokenRequestPassword : AccessTokenRequest
+        protected class AccessTokenRequestPassword : AccessTokenRequest
         {
             internal readonly string Username;
             internal readonly string Password;
@@ -187,7 +187,7 @@ namespace osu.Game.Online.API
             }
         }
 
-        private class AccessTokenRequest : OsuJsonWebRequest<OAuthToken>
+        protected class AccessTokenRequest : OsuJsonWebRequest<OAuthToken>
         {
             protected string GrantType;
 
@@ -205,7 +205,7 @@ namespace osu.Game.Online.API
             }
         }
 
-        private class OAuthError
+        protected class OAuthError
         {
             public string UserDisplayableError => !string.IsNullOrEmpty(Hint) ? Hint : ErrorIdentifier;
 

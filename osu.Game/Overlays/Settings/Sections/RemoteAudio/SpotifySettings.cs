@@ -32,13 +32,14 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
 
             Children = new Drawable[]
             {
+                // TODO: Make it so that this button switches from a sign in to a sign out button
                 oauthButton = new SettingsButton
                 {
                     Text = new LocalisableString("Setup Spotify"),
                     TooltipText = "Connect with your Spotify account",
                     Action = () => {
                         SpotifyManager.Init(notificationOverlay);
-                        SpotifyManager.Instance.OAuth(clientId.Value, clientSecret.Value, notificationOverlay);
+                        SpotifyManager.Instance.Connect(clientId.Value, clientSecret.Value, notificationOverlay);
                         if (oauthButton != null)
                             oauthButton.Action = null;
                         if (webpageButton != null)
@@ -54,12 +55,6 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
                     Keywords = new[] { @"remote", @"audio", @"spotify" },
                     TooltipText = "Setup Spotify account before opening webpage",
                 },
-                /*new SettingsButton
-                {
-                    Text = new LocalisableString("Start Local Server"),
-                    TooltipText = "Start local server to communicate with web SDK",
-                    Action = () => SpotifyManager.Init(),
-                },*/
                 new SettingsPasswordTextBox
                 {
                     PlaceholderText = "Client Id",
@@ -86,7 +81,7 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
 
             string[] paths = new String[] {System.IO.Directory.GetCurrentDirectory(), "osu.Game", "RemoteAudio", "index.html"};
             string path = System.IO.Path.Combine(paths);
-            
+
             Logger.Log(path);
             var p = new System.Diagnostics.Process();
             p.StartInfo = new System.Diagnostics.ProcessStartInfo(path)
