@@ -24,8 +24,9 @@ namespace osu.Game.Overlays.Settings.Sections
             Icon = FontAwesome.Solid.Music
         };
 
+
         [BackgroundDependencyLoader]
-        private void load(INotificationOverlay notifications)
+        private void load()
         {
             Children = new Drawable[]
             {

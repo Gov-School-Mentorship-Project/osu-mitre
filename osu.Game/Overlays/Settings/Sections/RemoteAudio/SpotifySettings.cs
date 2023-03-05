@@ -19,8 +19,9 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
         //[Resolved(CanBeNull = true)]
         //private OsuGame? game { get; set; }
         private INotificationOverlay notificationOverlay = null!;
-
         protected override LocalisableString Header => new LocalisableString("Spotify");
+        private SettingsButton? oauthButton;
+        private SettingsButton? webpageButton;
 
         [BackgroundDependencyLoader]
         private void load(OsuConfigManager config, INotificationOverlay notifications)
@@ -31,25 +32,34 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
 
             Children = new Drawable[]
             {
-                new SettingsButton
+                oauthButton = new SettingsButton
+                {
+                    Text = new LocalisableString("Setup Spotify"),
+                    TooltipText = "Connect with your Spotify account",
+                    Action = () => {
+                        SpotifyManager.Init(notificationOverlay);
+                        SpotifyManager.Instance.OAuth(clientId.Value, clientSecret.Value, notificationOverlay);
+                        if (oauthButton != null)
+                            oauthButton.Action = null;
+                        if (webpageButton != null)
+                        {
+                            webpageButton.TooltipText = "Open spotify player in browser";
+                            webpageButton.Action = OpenWebSDK;
+                        }
+                    }
+                },
+                webpageButton = new SettingsButton
                 {
                     Text = new LocalisableString("Open Webpage"),
                     Keywords = new[] { @"remote", @"audio", @"spotify" },
-                    TooltipText = "Open web SDK in browser",
-                    Action = OpenWebSDK
+                    TooltipText = "Setup Spotify account before opening webpage",
                 },
-                new SettingsButton
-                {
-                    Text = new LocalisableString("OAuth"),
-                    TooltipText = "Connect with your Spotify account",
-                    Action = () => SpotifyManager.Instance.OAuth(clientId.Value, clientSecret.Value, notificationOverlay),
-                },
-                new SettingsButton
+                /*new SettingsButton
                 {
                     Text = new LocalisableString("Start Local Server"),
                     TooltipText = "Start local server to communicate with web SDK",
                     Action = () => SpotifyManager.Init(),
-                },
+                },*/
                 new SettingsPasswordTextBox
                 {
                     PlaceholderText = "Client Id",

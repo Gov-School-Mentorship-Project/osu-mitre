@@ -20,8 +20,6 @@ namespace osu.Game.RemoteAudio
 {
     public sealed class SpotifyManager // This should be a singleton to store all authorization and connections with the Spotify API
     {
-        [Resolved]
-        private INotificationOverlay? notifications { get; set; }
         private SpotifyClient? spotify;
         private WebServer server;
         private ClientWebSocket socket;
@@ -59,9 +57,10 @@ namespace osu.Game.RemoteAudio
             Logger.Log($"Created Spotify Server with accessToken from SpotifyManager");
         }
 
-        public static void Init()
+        public static void Init(INotificationOverlay notification)
         {
             Logger.Log($"Init SpotifyManager");
+            Instance.socket.notifications = notification;
         }
 
         public void TransferDevice(string deviceId)
@@ -70,7 +69,7 @@ namespace osu.Game.RemoteAudio
             if (spotify == null)
                 return;
 
-            notifications?.Post(new SimpleNotification {Text = "Web SDK Has Connected. Now Transferring Spotify Playback Device."});
+            //notifications?.Post(new SimpleNotification {Text = "Web SDK Has Connected. Now Transferring Spotify Playback Device."});
             spotify.Player.TransferPlayback(new PlayerTransferPlaybackRequest(new List<string> { deviceId }));
             ready = true;
         }
@@ -159,8 +158,6 @@ namespace osu.Game.RemoteAudio
             Logger.Log("Starting oauth Server");
             server.Start().WaitSafely();
 
-            // get the PKCE code from OAuth
-            // TODO: Figure out why this isn't working
             string code = await WaitForCode(server, cts.Token).ConfigureAwait(true);
             Logger.Log("got code and now swapping for access token");
 

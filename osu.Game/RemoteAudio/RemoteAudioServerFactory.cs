@@ -1,7 +1,8 @@
 using osu.Framework.Logging;
 using EmbedIO;
 using EmbedIO.Actions;
-
+using osu.Game.Overlays;
+using osu.Game.Overlays.Notifications;
 
 namespace osu.Game.RemoteAudio
 {

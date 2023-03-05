@@ -2,11 +2,16 @@ using EmbedIO.WebSockets;
 using System;
 using System.Threading.Tasks;
 using osu.Framework.Logging;
+using osu.Game.Overlays.Notifications;
+using osu.Game.Overlays;
+using osu.Framework.Graphics.Sprites;
+using osu.Framework.Allocation;
 
 namespace osu.Game.RemoteAudio
 {
     public class ClientWebSocket : WebSocketModule
     {
+        public INotificationOverlay? notifications;
 
         public ClientWebSocket() :
         base("/connect", true)
@@ -21,13 +26,18 @@ namespace osu.Game.RemoteAudio
 
             // process the web sockets here!!!!
 
-            return SendAsync(context, "Message Recived");
+            return SendAsync(context, "Message Received");
             //return base.OnMessageReceivedAsync(context, rxBuffer, rxResult);
         }
 
         protected override Task OnClientConnectedAsync(IWebSocketContext context)
         {
             Logger.Log("client connected???");
+            notifications?.Post(new SimpleNotification
+            {
+                Text = "Webpage has successfully connected",
+                Icon = FontAwesome.Solid.Music,
+            });
             return base.OnClientConnectedAsync(context);
         }
 
