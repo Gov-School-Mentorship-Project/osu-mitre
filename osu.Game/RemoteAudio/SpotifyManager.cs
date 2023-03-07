@@ -114,11 +114,12 @@ namespace osu.Game.RemoteAudio
             socket.SeekTo(ms);
         }
 
-        public void Connect(string clientId, string clientSecret, INotificationOverlay notifications)
+        public void Login(string clientId, string clientSecret, INotificationOverlay notifications, Action action, CancellationTokenSource cts)
         {
             OAuthSpotify authentication = new OAuthSpotify(clientId, clientSecret, "https://api.spotify.com/v1");
             Logger.Log($"Authorize with OAuth! id: {clientId}, secret: {clientSecret}");
-            authentication.AuthenticateWithPKCE();
+
+            authentication.AuthenticateWithPKCE(cts);
 
             //authentication.TokenString = config.Get<string>(OsuSetting.Token);
             // TODO: See how to store the authorization
@@ -127,6 +128,7 @@ namespace osu.Game.RemoteAudio
                 Instance.Token = e.NewValue;
                 if (spotify != null)
                 {
+                    action.Invoke();
                     string spotifyUsername = (await spotify.UserProfile.Current().ConfigureAwait(false)).DisplayName;
                     notifications.Post(new SimpleNotification
                     {
@@ -135,6 +137,11 @@ namespace osu.Game.RemoteAudio
                     });
                 }
             };
+        }
+
+        public void Logout()
+        {
+            Instance.Token = null;
         }
 
         static async Task<string> WaitForCode(EmbedIOAuthServer server, CancellationToken cancellationToken)

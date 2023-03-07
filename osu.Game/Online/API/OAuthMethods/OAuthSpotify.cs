@@ -18,7 +18,7 @@ namespace osu.Game.Online.API.OAuthMethods
     {
         public OAuthSpotify(string clientId, string clientSecret, string endpoint) : base(clientId, clientSecret, endpoint) {}
 
-        public async void AuthenticateWithPKCE()
+        public async void AuthenticateWithPKCE(CancellationTokenSource cts)
         {
             Logger.Log("Generating Codes");
             (string verifier, string challenge) = PKCEUtil.GenerateCodes();
@@ -43,17 +43,34 @@ namespace osu.Game.Online.API.OAuthMethods
 
             // open spotify OAuth to get permission from user
             BrowserUtil.Open(request.ToUri());
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(120));
 
             Logger.Log("Starting oauth Server");
             server.Start().WaitSafely();
 
-            string code = await WaitForCode(server, cts.Token).ConfigureAwait(true);
-            Logger.Log("got code and now swapping for access token");
+            string code;
+            try {
+                code = await WaitForCode(server, cts.Token).ConfigureAwait(false);
+                Logger.Log("Received code and now swapping for access token");
+            } catch (OperationCanceledException)
+            {
+                Logger.Log("Spotify Login Canceled!");
+                await server.Stop().ConfigureAwait(false);
+                return;
+            }
 
             // switch the PKCE code for an access token and refresh token
             PKCETokenRequest initialRequest = new PKCETokenRequest(clientId, code, baseUri, verifier);
-            PKCETokenResponse initialResponse = await new OAuthClient().RequestToken(initialRequest).ConfigureAwait(false);
+            PKCETokenResponse initialResponse;
+            try
+            {
+                initialResponse = await new OAuthClient().RequestToken(initialRequest).ConfigureAwait(false);
+            } catch (SpotifyAPI.Web.APIException)
+            {
+                Logger.Log("Error switching grant for access token");
+                cts.Cancel();
+                await server.Stop().ConfigureAwait(false);
+                return;
+            }
 
             Token.Value = new OAuthToken() {
                 AccessToken = initialResponse.AccessToken,
@@ -62,12 +79,12 @@ namespace osu.Game.Online.API.OAuthMethods
             };
 
             Logger.Log($"got access token: {initialResponse.AccessToken}");
-            var authenticator = new PKCEAuthenticator(clientId, initialResponse);
+            //var authenticator = new PKCEAuthenticator(clientId, initialResponse);
 
             await server.Stop().ConfigureAwait(false);
         }
 
-        static async Task<string> WaitForCode(EmbedIOAuthServer server, CancellationToken cancellationToken)
+        static Task<string> WaitForCode(EmbedIOAuthServer server, CancellationToken cancellationToken)
         {
             var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -87,11 +104,11 @@ namespace osu.Game.Online.API.OAuthMethods
             server.AuthorizationCodeReceived += handler; // register the event listener
             server.ErrorReceived += errorHandler;
 
-            cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken));
+            cancellationToken.Register(() => {
+                tcs.TrySetCanceled(cancellationToken);
+            });
 
-            string code = await tcs.Task.ConfigureAwait(false);
-            server.AuthorizationCodeReceived -= handler;
-            return code;
+            return tcs.Task;
         }
     }
 }

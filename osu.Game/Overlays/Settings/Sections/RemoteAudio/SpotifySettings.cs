@@ -11,44 +11,31 @@ using System;
 using System.IO;
 using osu.Framework.Bindables;
 using osu.Game.Configuration;
+using System.Threading;
 
 namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
 {
     public partial class SpotifySettings : SettingsSubsection
     {
-        //[Resolved(CanBeNull = true)]
-        //private OsuGame? game { get; set; }
         private INotificationOverlay notificationOverlay = null!;
         protected override LocalisableString Header => new LocalisableString("Spotify");
-        private SettingsButton? oauthButton;
+        private RemoteAudioLoginButton? oauthButton;
         private SettingsButton? webpageButton;
+        Bindable<string> clientId = null!;
+        Bindable<string> clientSecret = null!;
 
         [BackgroundDependencyLoader]
         private void load(OsuConfigManager config, INotificationOverlay notifications)
         {
-            Bindable<string> clientId = config.GetBindable<string>(OsuSetting.RemoteAudioSpotifyClientId);
-            Bindable<string> clientSecret = config.GetBindable<string>(OsuSetting.RemoteAudioSpotifyClientSecret);
+            clientId = config.GetBindable<string>(OsuSetting.RemoteAudioSpotifyClientId);
+            clientSecret = config.GetBindable<string>(OsuSetting.RemoteAudioSpotifyClientSecret);
             notificationOverlay = notifications;
 
             Children = new Drawable[]
             {
-                // TODO: Make it so that this button switches from a sign in to a sign out button
-                oauthButton = new SettingsButton
-                {
-                    Text = new LocalisableString("Setup Spotify"),
-                    TooltipText = "Connect with your Spotify account",
-                    Action = () => {
-                        SpotifyManager.Init(notificationOverlay);
-                        SpotifyManager.Instance.Connect(clientId.Value, clientSecret.Value, notificationOverlay);
-                        if (oauthButton != null)
-                            oauthButton.Action = null;
-                        if (webpageButton != null)
-                        {
-                            webpageButton.TooltipText = "Open spotify player in browser";
-                            webpageButton.Action = OpenWebSDK;
-                        }
-                    }
-                },
+                // TODO: Break this out into a separeate class SpotifyLoginButton : SettingsButton
+                // to make it easier to manipulate the various states
+                oauthButton = new RemoteAudioLoginButton("Spotify"),
                 webpageButton = new SettingsButton
                 {
                     Text = new LocalisableString("Open Webpage"),
@@ -70,6 +57,7 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
                     Current = clientSecret
                 }
             };
+            oauthButton.SetState(LoginButtonState.Login, Login);
         }
 
         static void OpenWebSDK()
@@ -89,6 +77,49 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
                 UseShellExecute = true
             };
             p.Start();
+        }
+
+        void Login()
+        {
+            SpotifyManager.Init(notificationOverlay);
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(120));
+            cts.Token.Register(() => oauthButton?.SetState(LoginButtonState.Login, Login));
+
+            SpotifyManager.Instance.Login(clientId.Value, clientSecret.Value, notificationOverlay, OnLoginComplete, cts);
+            if (oauthButton != null)
+            {
+                oauthButton.SetState(LoginButtonState.Cancel, () =>
+                {
+                    cts.Cancel();
+                });
+            }
+        }
+
+        void Logout()
+        {
+            if (oauthButton == null)
+                return;
+
+            SpotifyManager.Instance.Logout();
+            oauthButton.SetState(LoginButtonState.Login, Login);
+        }
+
+        void OnLoginComplete()
+        {
+            if (oauthButton == null)
+                return;
+
+            oauthButton.SetState(LoginButtonState.Logout, Logout);
+
+            // TODO: Make the webpageButton able to be clicked any time and then the webpage able to handle it
+            if (webpageButton != null)
+            {
+                Schedule( () =>
+                {
+                    webpageButton.TooltipText = "Open spotify player in browser";
+                    webpageButton.Action = OpenWebSDK;
+                });
+            }
         }
     }
 }
