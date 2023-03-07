@@ -95,7 +95,7 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(120));
             cts.Token.Register(() => oauthButton?.SetState(LoginButtonState.Login, Login));
 
-            SpotifyManager.Instance.Login(clientId.Value, clientSecret.Value, OnLoginComplete, cts);
+            SpotifyManager.Instance.Login(OnLoginComplete, cts);
             if (oauthButton != null)
             {
                 oauthButton.SetState(LoginButtonState.Cancel, () =>

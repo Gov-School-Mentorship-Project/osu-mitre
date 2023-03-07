@@ -13,7 +13,7 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
             this.applicationName = applicationName;
         }
 
-        public void SetState(LoginButtonState state, Action action)
+        public void SetState(LoginButtonState state, Action action, string accountName = "")
         {
             Schedule(() => {
                 this.state = state;
@@ -29,7 +29,7 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
                         TooltipText = $"Cancel {applicationName} Login";
                         break;
                     case LoginButtonState.Logout:
-                        Text = "Logout";
+                        Text = $"Logout of {accountName}";
                         TooltipText = $"Sign out of your {applicationName} Account";
                         break;
                 }
