@@ -12,6 +12,7 @@ using System.IO;
 using osu.Framework.Bindables;
 using osu.Game.Configuration;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
 {
@@ -39,7 +40,8 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
                 {
                     Text = new LocalisableString("Open Webpage"),
                     Keywords = new[] { @"remote", @"audio", @"spotify" },
-                    TooltipText = "Setup Spotify account before opening webpage",
+                    TooltipText = "Open spotify player in browser",
+                    Action = OpenWebSDK
                 },
                 new SettingsPasswordTextBox
                 {
@@ -57,9 +59,16 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
                 }
             };
             if (SpotifyManager.Instance.LoggedIn)
-                oauthButton.SetState(LoginButtonState.Logout, Logout);
+            {
+                Task.Run(async() => {
+                    string name = await SpotifyManager.Instance.GetName().ConfigureAwait(false);
+                    oauthButton.SetState(LoginButtonState.Logout, Logout);
+                });
+            }
             else
+            {
                 oauthButton.SetState(LoginButtonState.Login, Login);
+            }
         }
 
         static void OpenWebSDK()
@@ -105,21 +114,13 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
             oauthButton.SetState(LoginButtonState.Login, Login);
         }
 
-        void OnLoginComplete()
+        async void OnLoginComplete()
         {
             if (oauthButton == null)
                 return;
 
-            oauthButton.SetState(LoginButtonState.Logout, Logout);
-
-            if (webpageButton != null) // TODO: Remove this funcionality and fix webpage
-            {
-                Schedule( () =>
-                {
-                    webpageButton.TooltipText = "Open spotify player in browser";
-                    webpageButton.Action = OpenWebSDK;
-                });
-            }
+            string name = await SpotifyManager.Instance.GetName().ConfigureAwait(false);
+            oauthButton.SetState(LoginButtonState.Logout, Logout, name);
         }
     }
 }
