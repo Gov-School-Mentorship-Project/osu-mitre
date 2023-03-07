@@ -389,6 +389,7 @@ namespace osu.Game.Configuration
         ComboColourNormalisationAmount,
         ProfileCoverExpanded,
         RemoteAudioSpotifyClientId,
-        RemoteAudioSpotifyClientSecret
+        RemoteAudioSpotifyClientSecret,
+        SpotifyToken
     }
 }

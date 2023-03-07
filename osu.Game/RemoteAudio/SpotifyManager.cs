@@ -16,6 +16,7 @@ using osu.Framework.Bindables;
 using System.Threading;
 using System.Threading.Tasks;
 using osu.Framework.Graphics.Sprites;
+using osu.Game.Configuration;
 
 namespace osu.Game.RemoteAudio
 {
@@ -26,21 +27,14 @@ namespace osu.Game.RemoteAudio
         private ClientWebSocket socket;
         public SpotifyTrack? currentTrack;
         public bool ready = false; // Has the web playback connected and has the device been transfered?
-
-        public OAuthToken? Token
-        {
-            get => _Token;
-            set
-            {
-                spotify = value != null ? new SpotifyClient(value.AccessToken) : null;
-                _Token = value;
-            }
-        }
-        private OAuthToken? _Token;
         public string? deviceId;
+        public bool LoggedIn => spotify != null;
 
+        private OsuConfigManager? config;
         private static readonly SpotifyManager instance;
         public static SpotifyManager Instance => instance;
+        public OAuthSpotify? authentication;
+        INotificationOverlay? notification;
 
         static SpotifyManager()
         {
@@ -54,10 +48,22 @@ namespace osu.Game.RemoteAudio
             Logger.Log($"Created Spotify Server with accessToken from SpotifyManager");
         }
 
-        public static void Init(INotificationOverlay notification)
+        public static void Init(INotificationOverlay notification, OsuConfigManager config)
         {
-            Logger.Log($"Init SpotifyManager");
+            //Instance = new SpotifyManager(notification, config);
+            Instance.config = config;
+            Instance.notification = notification;
+            //Instance.Token = OAuthToken.Parse(config.Get<string>(OsuSetting.Token));
             Instance.socket.notifications = notification;
+            Instance.authentication = new OAuthSpotify(
+                config.Get<string>(OsuSetting.RemoteAudioSpotifyClientId),
+                config.Get<string>(OsuSetting.RemoteAudioSpotifyClientSecret),
+                "https://api.spotify.com/v1");
+
+            Instance.authentication.Token.ValueChanged += Instance.OnTokenChanged;
+            Instance.authentication.Token.Value = OAuthToken.Parse(config.Get<string>(OsuSetting.SpotifyToken));
+
+            Logger.Log($"Init SpotifyManager");
         }
 
         public void TransferDevice(string deviceId)
@@ -114,34 +120,21 @@ namespace osu.Game.RemoteAudio
             socket.SeekTo(ms);
         }
 
-        public void Login(string clientId, string clientSecret, INotificationOverlay notifications, Action action, CancellationTokenSource cts)
+        public void Login(string clientId, string clientSecret, Action onLoginComplete, CancellationTokenSource cts)
         {
-            OAuthSpotify authentication = new OAuthSpotify(clientId, clientSecret, "https://api.spotify.com/v1");
             Logger.Log($"Authorize with OAuth! id: {clientId}, secret: {clientSecret}");
+            if (authentication == null)
+                return;
 
             authentication.AuthenticateWithPKCE(cts);
 
-            //authentication.TokenString = config.Get<string>(OsuSetting.Token);
-            // TODO: See how to store the authorization
-
-            authentication.Token.ValueChanged += async (ValueChangedEvent<OAuthToken> e) => {
-                Instance.Token = e.NewValue;
-                if (spotify != null)
-                {
-                    action.Invoke();
-                    string spotifyUsername = (await spotify.UserProfile.Current().ConfigureAwait(false)).DisplayName;
-                    notifications.Post(new SimpleNotification
-                    {
-                        Text = $"Successfully connected to Spotify account: {spotifyUsername}",
-                        Icon = FontAwesome.Solid.Music,
-                    });
-                }
-            };
+            authentication.Token.ValueChanged += (ValueChangedEvent<OAuthToken> e) => onLoginComplete.Invoke();
         }
 
         public void Logout()
         {
-            Instance.Token = null;
+            //Instance.Token = null;
+            authentication?.Clear();
         }
 
         static async Task<string> WaitForCode(EmbedIOAuthServer server, CancellationToken cancellationToken)
@@ -174,12 +167,24 @@ namespace osu.Game.RemoteAudio
             return code;
         }
 
-        private void OnTokenChanged(ValueChangedEvent<OAuthToken> e) {
-            Logger.Log($"Got Access Token: {e.NewValue.AccessToken}");
-            Instance.Token = e.NewValue;
+        private async void OnTokenChanged(ValueChangedEvent<OAuthToken> e) {
+            if (e.NewValue == null || e.NewValue.AccessToken == null)
+            {
+                spotify = null;
+                return;
+            }
 
-            // TODO: Potentially store the refresh and access tokens in the config somewhere
-            //config.SetValue(OsuSetting.Token, config.Get<bool>(OsuSetting.SavePassword) ? authentication.TokenString : string.Empty)
+            spotify = new SpotifyClient(e.NewValue.AccessToken);
+            config?.SetValue(OsuSetting.SpotifyToken, e.NewValue.ToString());
+            if (spotify != null)
+            {
+                string spotifyUsername = (await spotify.UserProfile.Current().ConfigureAwait(false)).DisplayName;
+                notification?.Post(new SimpleNotification
+                {
+                    Text = $"Successfully connected to Spotify account: {spotifyUsername}",
+                    Icon = FontAwesome.Solid.Music,
+                });
+            }
         }
     }
 }

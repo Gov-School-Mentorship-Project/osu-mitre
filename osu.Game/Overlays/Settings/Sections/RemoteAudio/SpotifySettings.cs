@@ -27,14 +27,13 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
         [BackgroundDependencyLoader]
         private void load(OsuConfigManager config, INotificationOverlay notifications)
         {
+            SpotifyManager.Init(notificationOverlay, config);
             clientId = config.GetBindable<string>(OsuSetting.RemoteAudioSpotifyClientId);
             clientSecret = config.GetBindable<string>(OsuSetting.RemoteAudioSpotifyClientSecret);
             notificationOverlay = notifications;
 
             Children = new Drawable[]
             {
-                // TODO: Break this out into a separeate class SpotifyLoginButton : SettingsButton
-                // to make it easier to manipulate the various states
                 oauthButton = new RemoteAudioLoginButton("Spotify"),
                 webpageButton = new SettingsButton
                 {
@@ -57,7 +56,10 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
                     Current = clientSecret
                 }
             };
-            oauthButton.SetState(LoginButtonState.Login, Login);
+            if (SpotifyManager.Instance.LoggedIn)
+                oauthButton.SetState(LoginButtonState.Logout, Logout);
+            else
+                oauthButton.SetState(LoginButtonState.Login, Login);
         }
 
         static void OpenWebSDK()
@@ -81,11 +83,10 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
 
         void Login()
         {
-            SpotifyManager.Init(notificationOverlay);
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(120));
             cts.Token.Register(() => oauthButton?.SetState(LoginButtonState.Login, Login));
 
-            SpotifyManager.Instance.Login(clientId.Value, clientSecret.Value, notificationOverlay, OnLoginComplete, cts);
+            SpotifyManager.Instance.Login(clientId.Value, clientSecret.Value, OnLoginComplete, cts);
             if (oauthButton != null)
             {
                 oauthButton.SetState(LoginButtonState.Cancel, () =>
@@ -111,8 +112,7 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
 
             oauthButton.SetState(LoginButtonState.Logout, Logout);
 
-            // TODO: Make the webpageButton able to be clicked any time and then the webpage able to handle it
-            if (webpageButton != null)
+            if (webpageButton != null) // TODO: Remove this funcionality and fix webpage
             {
                 Schedule( () =>
                 {
