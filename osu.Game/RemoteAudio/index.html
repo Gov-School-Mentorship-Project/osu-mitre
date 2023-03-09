@@ -54,12 +54,12 @@
     <script src="https://sdk.scdn.co/spotify-player.js"></script>
     <script defer>
 
-    let httpUrl = "http://localhost:9999";
-    
+    var httpUrl = "http://localhost:9999";
+    var token;
+    var transferred = true;
     window.onSpotifyWebPlaybackSDKReady = () => {
 
         // Get the token from the main program API
-        let token;
         fetch(httpUrl + "/token")
         .then((res) => res.json())
         .then((data) => {
@@ -72,7 +72,7 @@
         });
         
         // Use token to create the Spotify player
-        const player = new Spotify.Player({
+        var player = new Spotify.Player({
             name: 'Web Playback SDK Quick Start Player',
             getOAuthToken: cb => {cb(token); }
         });
@@ -83,6 +83,9 @@
             fetch(httpUrl + "/device?id=" + device_id,
             {
                 method: 'POST'
+            }).then((data) => {
+                transferred = true; 
+                ConnectToWebSocket();
             });
         });
 
@@ -112,37 +115,6 @@
         });
 
         // connect to the socket 
-        var ws = new WebSocket("ws://localhost:9999/connect")
-
-        ws.addEventListener('message', (m) => {
-            let data = m.data.split(":");
-            switch (data[0])
-            {
-                case 'play':
-                    let uri = data[1]; 
-                    console.log("Don't know what to do with this " + data);
-                    break;
-                case 'seek':
-                    let ms = parseInt(data[1]);
-                    player.seek(ms).then(() => {
-                        console.log("seek to " + ms + "!");
-                    });
-                    break;
-                case 'pause':
-                    player.pause().then(() => {
-                        console.log("paused!");
-                    });
-                    break;
-                case 'resume':
-                    player.resume().then(() => {
-                        console.log("resumed!");
-                    });
-                    break;
-                default:
-                    console.log("invalid web socket message", m.data);
-            }
-        });
-        console.log(ws);
 
         // State changed! Update the UI and send the state to the main program via http request
         player.addListener("player_state_changed", (state => {
@@ -190,6 +162,41 @@
                 method: 'POST'
             });
         };
+    }
+
+    function ConnectToWebSocket()
+    {
+        var ws = new WebSocket("ws://localhost:9999/connect");
+
+        ws.addEventListener('message', (m) => {
+            let data = m.data.split(":");
+            switch (data[0])
+            {
+                case 'play':
+                    let uri = data[1]; 
+                    console.log("Don't know what to do with this " + data);
+                    break;
+                case 'seek':
+                    let ms = parseInt(data[1]);
+                    player.seek(ms).then(() => {
+                        console.log("seek to " + ms + "!");
+                    });
+                    break;
+                case 'pause':
+                    player.pause().then(() => {
+                        console.log("paused!");
+                    });
+                    break;
+                case 'resume':
+                    player.resume().then(() => {
+                        console.log("resumed!");
+                    });
+                    break;
+                default:
+                    console.log("invalid web socket message", m.data);
+            }
+        });
+        console.log(ws);
     }
 
     </script> 

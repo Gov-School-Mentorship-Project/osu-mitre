@@ -3,6 +3,7 @@ using EmbedIO.Actions;
 using osu.Framework.Logging;
 using osu.Game.Overlays;
 using osu.Game.Overlays.Notifications;
+using System.Net;
 
 namespace osu.Game.RemoteAudio
 {
@@ -30,12 +31,12 @@ namespace osu.Game.RemoteAudio
             {
                 string? deviceId = ctx.Request.QueryString[0];
                 if (deviceId == null)
-                    throw new HttpException(400);
+                    return ctx.SendDataAsync(HttpStatusCode.BadRequest);
 
                 SpotifyManager.Instance.deviceId = deviceId;
                 Logger.Log($"Device ID Received: {deviceId} from SpotifyServer");
                 SpotifyManager.Instance.TransferDevice(deviceId);
-                return ctx.SendDataAsync("");
+                    return ctx.SendDataAsync(HttpStatusCode.OK);
             });
         }
 
@@ -43,10 +44,9 @@ namespace osu.Game.RemoteAudio
         {
             return new ActionModule("/token", HttpVerbs.Get, (ctx) =>
             {
-                //string? at = SpotifyManager.Instance.authentication?.RequestAccessToken() ?? null;
                 string? accessToken = SpotifyManager.Instance.authentication?.Token?.Value?.AccessToken;
                 if (accessToken == null)
-                    throw new HttpException(404);
+                    return ctx.SendDataAsync(HttpStatusCode.Unauthorized);
 
                 Logger.Log($"Sending access token from SpotifyServer: {accessToken}");
                 return ctx.SendDataAsync(accessToken);
@@ -61,10 +61,10 @@ namespace osu.Game.RemoteAudio
 
                 var query = ctx.Request.QueryString;
                 if (query[2] == null)
-                    throw new HttpException(400);
+                    return ctx.SendDataAsync(HttpStatusCode.BadRequest);
 
                 if (SpotifyManager.Instance.currentTrack == null)
-                    throw new HttpException(404);
+                    return ctx.SendDataAsync(HttpStatusCode.NoContent);
 
                 if (long.TryParse(query[0], out long progress))
                 {
@@ -74,15 +74,15 @@ namespace osu.Game.RemoteAudio
                     }
                 }
 
-                return ctx.SendDataAsync("");
+                return ctx.SendDataAsync(HttpStatusCode.OK);
             });
         }
 
-        private static ActionModule CreateInteractionHandler()
+        private static ActionModule CreateInteractionHandler() // TODO: Get rid of this and handle this on the webpage
         {
             return new ActionModule("/interact", HttpVerbs.Post, (ctx) =>
             {
-                return ctx.SendDataAsync("");
+                return ctx.SendDataAsync(HttpStatusCode.OK);
             });
         }
     }
