@@ -43,12 +43,13 @@ namespace osu.Game.RemoteAudio
         {
             return new ActionModule("/token", HttpVerbs.Get, (ctx) =>
             {
-                string? at = SpotifyManager.Instance.authentication?.RequestAccessToken() ?? null;
-                if (at == null)
+                //string? at = SpotifyManager.Instance.authentication?.RequestAccessToken() ?? null;
+                string? accessToken = SpotifyManager.Instance.authentication?.Token?.Value?.AccessToken;
+                if (accessToken == null)
                     throw new HttpException(404);
 
-                Logger.Log($"Sending access token from SpotifyServer: {at}");
-                return ctx.SendDataAsync(at);
+                Logger.Log($"Sending access token from SpotifyServer: {accessToken}");
+                return ctx.SendDataAsync(accessToken);
             });
         }
 

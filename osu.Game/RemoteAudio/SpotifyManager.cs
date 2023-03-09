@@ -169,8 +169,9 @@ namespace osu.Game.RemoteAudio
                 Logger.Log("GetName() Request Timed Out");
                 return null;
             }
-            catch (Exception ex) when (ex is SpotifyAPI.Web.APIException || ex is System.Net.Http.HttpRequestException)
+            catch (Exception e) when (e is SpotifyAPI.Web.APIException || e is System.Net.Http.HttpRequestException)
             {
+                Logger.Log($"Error in Spotify Authorization: {e}");
                 cts.Cancel();
                 Logout();
                 return null;
@@ -252,10 +253,9 @@ namespace osu.Game.RemoteAudio
                 {
                     LoginStateUpdated?.Invoke(LoginState.LoggedOut, string.Empty);
                     spotify = null;
-                    notification?.Post(new SimpleNotification
+                    notification?.Post(new SimpleErrorNotification
                     {
                         Text = "Error connecting to Spotify!",
-                        Icon = FontAwesome.Solid.Music,
                     });
                 }
                 else
