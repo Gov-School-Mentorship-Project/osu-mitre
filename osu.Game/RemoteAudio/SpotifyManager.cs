@@ -247,10 +247,10 @@ namespace osu.Game.RemoteAudio
                 spotifyUsername = await GetName().ConfigureAwait(true);
                 Logger.Log($"Logged in with spotify username {spotifyUsername}");
 
-                LoginStateUpdated?.Invoke(LoginState.LoggedIn, spotifyUsername);
 
                 if (spotifyUsername == null)
                 {
+                    LoginStateUpdated?.Invoke(LoginState.LoggedOut, string.Empty);
                     spotify = null;
                     notification?.Post(new SimpleNotification
                     {
@@ -260,6 +260,7 @@ namespace osu.Game.RemoteAudio
                 }
                 else
                 {
+                    LoginStateUpdated?.Invoke(LoginState.LoggedIn, spotifyUsername);
                     notification?.Post(new SimpleNotification
                     {
                         Text = $"Successfully connected to Spotify account: {spotifyUsername}",
