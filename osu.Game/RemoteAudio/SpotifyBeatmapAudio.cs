@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace osu.Game.RemoteAudio
 {
-    static class SpotifyBeatmapAudio // I wish there were a way to make this inherit from a super class to handle all RemoteAudio stuff
+    internal static class SpotifyBeatmapAudio // I wish there were a way to make this inherit from a super class to handle all RemoteAudio stuff
     {
         public static bool validateRemoteAudio(string reference, out string convertedReference)
         {

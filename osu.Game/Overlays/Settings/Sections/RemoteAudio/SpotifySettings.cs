@@ -1,37 +1,39 @@
 
+using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using osu.Framework.Allocation;
+using osu.Framework.Bindables;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
 using osu.Framework.Logging;
+using osu.Game.Configuration;
 using osu.Game.Graphics;
 using osu.Game.Localisation;
 using osu.Game.RemoteAudio;
-using System;
-using System.IO;
-using osu.Framework.Bindables;
-using osu.Game.Configuration;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
 {
     public partial class SpotifySettings : SettingsSubsection
     {
-        private INotificationOverlay notificationOverlay = null!;
         protected override LocalisableString Header => new LocalisableString("Spotify");
+
         private RemoteAudioLoginButton? oauthButton;
         private SettingsButton? webpageButton;
-        Bindable<string> clientId = null!;
-        Bindable<string> clientSecret = null!;
+
+        private Bindable<string> clientId = null!;
+        private Bindable<string> clientSecret = null!;
+
+        private CancellationTokenSource cts = null!;
 
         [BackgroundDependencyLoader]
         private void load(OsuConfigManager config, INotificationOverlay notifications)
         {
-            SpotifyManager.Init(notificationOverlay, config);
+            SpotifyManager.Init(notifications, config);
             clientId = config.GetBindable<string>(OsuSetting.RemoteAudioSpotifyClientId);
             clientSecret = config.GetBindable<string>(OsuSetting.RemoteAudioSpotifyClientSecret);
-            notificationOverlay = notifications;
 
             Children = new Drawable[]
             {
@@ -58,54 +60,42 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
                     Current = clientSecret
                 }
             };
-            if (SpotifyManager.Instance.LoggedIn)
-            {
-                Task.Run(async() => {
-                    string name = await SpotifyManager.Instance.GetName().ConfigureAwait(false);
-                    oauthButton.SetState(LoginButtonState.Logout, Logout);
-                });
-            }
-            else
-            {
-                oauthButton.SetState(LoginButtonState.Login, Login);
-            }
+
+            oauthButton.SetState(LoginButtonState.Login, Logout);
+            SpotifyManager.Instance.LoginStateUpdated += OnLoginStateUpdated;
         }
 
-        static void OpenWebSDK()
+        private static void OpenWebSDK()
         {
             DirectoryInfo? wd = Directory.GetParent(Environment.CurrentDirectory);
 
             if (wd == null)
                 return;
 
-            string[] paths = new String[] {System.IO.Directory.GetCurrentDirectory(), "osu.Game", "RemoteAudio", "index.html"};
-            string path = System.IO.Path.Combine(paths);
+            string[] paths = new string[] { Directory.GetCurrentDirectory(), "osu.Game", "RemoteAudio", "index.html" };
+            string path = Path.Combine(paths);
 
             Logger.Log(path);
-            var p = new System.Diagnostics.Process();
-            p.StartInfo = new System.Diagnostics.ProcessStartInfo(path)
+            var p = new System.Diagnostics.Process
             {
-                UseShellExecute = true
+                StartInfo = new System.Diagnostics.ProcessStartInfo(path)
+                {
+                    UseShellExecute = true
+                }
             };
             p.Start();
         }
 
-        void Login()
+        private void Login()
         {
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(120));
+            cts = new CancellationTokenSource(TimeSpan.FromSeconds(120));
             cts.Token.Register(() => oauthButton?.SetState(LoginButtonState.Login, Login));
 
-            SpotifyManager.Instance.Login(OnLoginComplete, cts);
-            if (oauthButton != null)
-            {
-                oauthButton.SetState(LoginButtonState.Cancel, () =>
-                {
-                    cts.Cancel();
-                });
-            }
+            SpotifyManager.Instance.Login(cts);
+            oauthButton?.SetState(LoginButtonState.Cancel, Cancel);
         }
 
-        void Logout()
+        private void Logout()
         {
             if (oauthButton == null)
                 return;
@@ -114,13 +104,28 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
             oauthButton.SetState(LoginButtonState.Login, Login);
         }
 
-        async void OnLoginComplete()
+        private void Cancel()
+        {
+            cts.Cancel();
+        }
+
+        public void OnLoginStateUpdated(LoginState state, string? username)
         {
             if (oauthButton == null)
                 return;
 
-            string name = await SpotifyManager.Instance.GetName().ConfigureAwait(false);
-            oauthButton.SetState(LoginButtonState.Logout, Logout, name);
+            switch (state)
+            {
+                case LoginState.LoggedIn:
+                    oauthButton.SetState(LoginButtonState.Logout, Logout, username ?? string.Empty);
+                    break;
+                case LoginState.Loading:
+                    oauthButton.SetState(LoginButtonState.Cancel, Cancel);
+                    break;
+                case LoginState.LoggedOut:
+                    oauthButton.SetState(LoginButtonState.Login, Logout);
+                    break;
+            }
         }
     }
 }

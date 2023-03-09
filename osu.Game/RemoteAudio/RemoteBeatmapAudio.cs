@@ -1,6 +1,6 @@
-using System.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using osu.Game.Beatmaps.RemoteAudio;
 
 namespace osu.Game.RemoteAudio
@@ -19,7 +19,7 @@ namespace osu.Game.RemoteAudio
 
         public static RemoteTrack? TrackFromReference(string reference)
         {
-           if (SpotifyBeatmapAudio.validateRemoteAudio(reference, out _))
+            if (SpotifyBeatmapAudio.validateRemoteAudio(reference, out _))
                 return new SpotifyTrack(reference);
 
             return null;

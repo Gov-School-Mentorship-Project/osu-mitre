@@ -1,6 +1,6 @@
-using osu.Framework.Logging;
 using EmbedIO;
 using EmbedIO.Actions;
+using osu.Framework.Logging;
 using osu.Game.Overlays;
 using osu.Game.Overlays.Notifications;
 
@@ -11,7 +11,7 @@ namespace osu.Game.RemoteAudio
         public static (WebServer, ClientWebSocket) CreateSpotifyServer(string url)
         {
             ClientWebSocket socket = new ClientWebSocket();
-            WebServer server =  new WebServer(o => o
+            WebServer server = new WebServer(o => o
                 .WithUrlPrefix(url)
                 .WithMode(HttpListenerMode.EmbedIO))
                 .WithLocalSessionManager()
@@ -21,9 +21,10 @@ namespace osu.Game.RemoteAudio
                 .WithModule(CreateAuthTokenHandler())
                 .WithModule(CreateInteractionHandler())
                 .WithModule(socket);
-                return (server, socket);
+            return (server, socket);
         }
-        static ActionModule CreateDeviceHandler()
+
+        private static ActionModule CreateDeviceHandler()
         {
             return new ActionModule("/device", HttpVerbs.Post, (ctx) =>
             {
@@ -38,7 +39,7 @@ namespace osu.Game.RemoteAudio
             });
         }
 
-        static ActionModule CreateAuthTokenHandler()
+        private static ActionModule CreateAuthTokenHandler()
         {
             return new ActionModule("/token", HttpVerbs.Get, (ctx) =>
             {
@@ -51,7 +52,7 @@ namespace osu.Game.RemoteAudio
             });
         }
 
-        static ActionModule CreateStateHandler()
+        private static ActionModule CreateStateHandler()
         {
             return new ActionModule("/state", HttpVerbs.Post, (ctx) =>
             {
@@ -64,11 +65,9 @@ namespace osu.Game.RemoteAudio
                 if (SpotifyManager.Instance.currentTrack == null)
                     throw new HttpException(404);
 
-                long progress;
-                long timestamp;
-                if (long.TryParse(query[0], out progress))
+                if (long.TryParse(query[0], out long progress))
                 {
-                    if (long.TryParse(query[1], out timestamp))
+                    if (long.TryParse(query[1], out long timestamp))
                     {
                         SpotifyManager.Instance.currentTrack.StateUpdate(timestamp, progress, query[2] == "true");
                     }
@@ -78,7 +77,7 @@ namespace osu.Game.RemoteAudio
             });
         }
 
-        static ActionModule CreateInteractionHandler()
+        private static ActionModule CreateInteractionHandler()
         {
             return new ActionModule("/interact", HttpVerbs.Post, (ctx) =>
             {
