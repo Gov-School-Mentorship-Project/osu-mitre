@@ -7,10 +7,7 @@
             font-weight: 100;  
             padding: 0; 
             margin: 0;
-        }
-
-        html {
-            height: 100%;
+            font-family: Helvetica, sans-serif;
         }
 
         body {
@@ -19,7 +16,6 @@
             background-repeat: no-repeat;
             background-attachment: fixed;
             background-image: linear-gradient(to bottom right, rgba(89,79,78,255), rgba(24,24,24,255));
-            
         }
 
         img {
@@ -47,6 +43,23 @@
             color: rgba(194,193,191,255);
         }
 
+        #logContainer
+        {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            height: 400px;
+            overflow-y: scroll;
+            overflow-wrap: break-word;
+            -ms-overflow-style: none; 
+            scrollbar-width: none;
+        }
+
+        #logContainer::-webkit-scrollbar
+        {
+            display: none;
+        }
 
     </style>
   </head>
@@ -56,7 +69,10 @@
 
     var httpUrl = "http://localhost:9999";
     var token;
+    var player;
+    var ws;
     var transferred = true;
+    var trackUri;
     window.onSpotifyWebPlaybackSDKReady = () => {
 
         // Get the token from the main program API
@@ -72,7 +88,7 @@
         });
         
         // Use token to create the Spotify player
-        var player = new Spotify.Player({
+        player = new Spotify.Player({
             name: 'Web Playback SDK Quick Start Player',
             getOAuthToken: cb => {cb(token); }
         });
@@ -128,6 +144,8 @@
             + "&paused=" + state.paused, 
             {
                 method: 'POST'
+            }).then((data) => {
+                console.log(data);
             });
 
             // Update UI
@@ -144,13 +162,14 @@
             }
             let titleElem = document.getElementById("title");
             let artistElem = document.getElementById("artist");
-            if (titleElem.innerText == track && artistElem.innerText == artists) // ensure that the image does not get unnecessarily refreshed
+            if (trackUri == track.uri) // ensure that the image does not get automatically refreshed
                 return;
 
+            trackUri = track.uri;
             titleElem.innerText = track.name;
             artistElem.innerText = artists;
+            LogEvent("Play", track.name);
             document.getElementById("album").setAttribute("src", track.album.images[0].url);
-
         }));
 
 
@@ -166,9 +185,11 @@
 
     function ConnectToWebSocket()
     {
-        var ws = new WebSocket("ws://localhost:9999/connect");
+        ws = new WebSocket("ws://localhost:9999/connect");
 
         ws.addEventListener('message', (m) => {
+            LogEvent("WS: ", m.data);
+            console.log("message received", m);
             let data = m.data.split(":");
             switch (data[0])
             {
@@ -199,6 +220,11 @@
         console.log(ws);
     }
 
+    function LogEvent(eventType, message)
+    {
+        document.getElementById("log").innerHTML += '</br>' + "<em>" + eventType + "</em>: " + message
+    }
+
     </script> 
     
     <div id="content" style="display: none">
@@ -207,6 +233,9 @@
         <p id="artist"></p>
         <input type="range" id="progress"/>
         <p id="timer"></p>
+        <div id="logContainer">
+            <p id="log"><span style="text-align: center; display: inline-block; width: 100%">Logs</span></p>
+        </div>
     </div>
     <div id="interactContainer">
         <button id="interact">Click to get started!</button>
