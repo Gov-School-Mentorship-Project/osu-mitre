@@ -100,6 +100,7 @@ namespace osu.Game.Configuration
 
             SetDefault(OsuSetting.RemoteAudioSpotifyClientId, string.Empty);
             SetDefault(OsuSetting.RemoteAudioSpotifyClientSecret, string.Empty);
+            SetDefault(OsuSetting.SpotifyToken, string.Empty);
 
             // Input
             SetDefault(OsuSetting.MenuCursorSize, 1.0f, 0.5f, 2f, 0.01f);
