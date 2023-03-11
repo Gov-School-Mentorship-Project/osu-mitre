@@ -15,96 +15,79 @@ namespace osu.Game.Beatmaps.RemoteAudio
 {
     public sealed class SpotifyTrack : RemoteTrack
     {
-        public override bool IsRunning => running;
-        private bool running = false;
+        //public override bool IsRunning => running;
+        //private bool running = false;
         //private bool readyInWebSdk = false;
         public  bool pendingStateUpdate = false; // Todo: Make this get updated by changing the times
 
-        public DateTimeOffset start = DateTimeOffset.Now; // time at which track started (updates after pauses)
-        public override double CurrentTime => DateTimeOffset.Now.Subtract(start).TotalMilliseconds;
+        //public DateTimeOffset start = DateTimeOffset.Now; // time at which track started (updates after pauses)
+        //public override double CurrentTime => DateTimeOffset.Now.Subtract(start).TotalMilliseconds;
 
-        public double currentTime {
+        /*public double currentTime {
             set {
                 start = DateTimeOffset.Now.AddMilliseconds(-value);
             }
-        }
+        }*/
 
         public SpotifyTrack(string reference, string name = "spotify")
-            : base(reference, name)
+            : base(30000, reference, name)
         {
             Logger.Log($"Creating Track: {reference}");
-            Length = 30000; // 30 seconds
-
-            SpotifyManager.Instance.Play(reference); // TODO: Figure out where begin the web player
-            //readyInWebSdk = true;
+            //SpotifyManager.Instance.Play(reference); // TODO: Figure out where begin the web player
         }
 
         public override bool Seek(double seek)
         {
-            if (pendingStateUpdate || seek < 0)
-                return false;
-
             Logger.Log($"Seeking to {seek} from SpotifyTrack at {CurrentTime}!!");
 
-            pendingStateUpdate = true;
-            currentTime = seek;
-            SpotifyManager.Instance.Seek((long)seek);
-            return seek > 0 && seek < Length;
+            if (Math.Abs(seek - CurrentTime) > 2000 && seek > 0 /*&& !pendingStateUpdate*/)
+            {
+                Logger.Log("need to seek here");
+                //SpotifyManager.Instance.Seek((long)seek);
+                pendingStateUpdate = true;
+            }
+            return base.Seek(seek);
         }
-
-        //public override Task<bool> SeekAsync(double seek) => Task.FromResult(Seek(seek));
 
         public override void Start()
         {
+            Logger.Log("START!!");
             Logger.Log($"Starting track {reference} from SpotifyTrack at {CurrentTime}!!");
 
-            currentTime = 0;
+            base.Start();
             pendingStateUpdate = true;
 
             SpotifyManager.Instance.currentTrack = this;
-            SpotifyManager.Instance.Play(reference);
+            SpotifyManager.Instance.Play(reference, (int)CurrentTime);
         }
-
-        /*public override Task StartAsync()
-        {
-            Start();
-            return Task.CompletedTask;
-        }*/
 
         public override void Reset()
         {
-            Logger.Log("Reseting Track {reference} from SpotifyTrack at {CurrentTime}");
-
-            pendingStateUpdate = true;
-            Seek(0);
+            SpotifyManager.Instance.Reset();
             base.Reset();
         }
 
         public override void Stop()
         {
-            if (IsRunning && pendingStateUpdate)
-            {
-                Logger.Log("Stopping Track {reference} from SpotifyTrack at {CurrentTime}");
-
-                //running = false;
-                pendingStateUpdate = true;
-                SpotifyManager.Instance.Stop();
-            }
+            Logger.Log("STOP!!!");
+            Logger.Log($"Stopping Track {reference} from SpotifyTrack at {CurrentTime}");
+            base.Stop();
+            pendingStateUpdate = true;
+            SpotifyManager.Instance.Stop();
         }
 
         public void StateUpdate(long timestamp, long progress, bool paused)
         {
-            Logger.Log($"State Updated from {CurrentTime} to");
-            start = DateTimeOffset.FromUnixTimeMilliseconds(timestamp - progress);
-            Logger.Log($"{CurrentTime} which should be {progress}");
-            running = paused;
+            Logger.Log($"State Updated from {CurrentTime} to {progress}");
             pendingStateUpdate = false;
-        }
+            //if (paused)
+                //Stop();
+//
+            //if (Math.Abs(progress - CurrentTime) < 2000 && !pendingStateUpdate) // TODO: Calculate real progress from here
+                //Seek(progress);
 
-        /*public override Task StopAsync()
-        {
-            Stop();
-            return Task.CompletedTask;
-        }*/
+            //start = DateTimeOffset.FromUnixTimeMilliseconds(timestamp - progress);
+            Logger.Log($"{CurrentTime} which should be {progress}");
+        }
     }
 }

@@ -208,6 +208,13 @@
                         console.log("paused!");
                     });
                     break;
+                case 'reset':
+                    player.seek(0).then(() => {
+                        player.resume().then(() => {
+                            console.log("reset!");
+                        });
+                    });
+                    break;
                 case 'resume':
                     player.resume().then(() => {
                         console.log("resumed!");

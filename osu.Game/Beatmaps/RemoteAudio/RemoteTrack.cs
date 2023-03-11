@@ -16,33 +16,37 @@ namespace osu.Game.Beatmaps.RemoteAudio
 {
     public class RemoteTrack : Track
     {
-        protected readonly StopwatchClock referenceClock;
-        protected string reference;
-        public override bool IsRunning => referenceClock.IsRunning;
+        private readonly StopwatchClock clock = new StopwatchClock();
 
-        public override double CurrentTime => referenceClock.CurrentTime;
+        private double seekOffset;
 
-        public RemoteTrack(string reference, string name = "remote")
+        public string reference;
+
+        public RemoteTrack(double length, string reference, string name = "virtual")
             : base(name)
         {
-            RemoteBeatmapAudio.validateRemoteAudio(reference, out this.reference);
-            referenceClock = new StopwatchClock();
-            Length = 30000; // 30 seconds
+            Length = length;
+            this.reference = reference;
         }
 
         public override bool Seek(double seek)
         {
-            referenceClock.Seek(seek);
-            Logger.Log($"Seek to {seek}!!");
-            return seek > 0 && seek < Length;
+            seekOffset = Math.Clamp(seek, 0, Length);
+
+            lock (clock)
+            {
+                if (IsRunning)
+                    clock.Restart();
+                else
+                    clock.Reset();
+            }
+
+            return seekOffset == seek;
         }
 
-        public override Task<bool> SeekAsync(double seek) => Task.FromResult(Seek(seek));
-
-        public override void Start()
+        public override Task<bool> SeekAsync(double seek)
         {
-            referenceClock.Start();
-            Logger.Log($"Start Track!!");
+            return Task.FromResult(Seek(seek));
         }
 
         public override Task StartAsync()
@@ -51,27 +55,82 @@ namespace osu.Game.Beatmaps.RemoteAudio
             return Task.CompletedTask;
         }
 
-        public override void Reset()
-        {
-            Logger.Log("Reset Track!");
-            Seek(0);
-            base.Reset();
-        }
-
-        public override void Stop()
-        {
-            if (IsRunning)
-            {
-                referenceClock.Stop();
-                Logger.Log($"Stop Track!!");
-            }
-        }
-
         public override Task StopAsync()
         {
             Stop();
             return Task.CompletedTask;
         }
 
+        public override void Start()
+        {
+            if (Length == 0)
+                return;
+
+            lock (clock) clock.Start();
+        }
+
+        public override void Reset()
+        {
+            lock (clock) clock.Reset();
+            seekOffset = 0;
+
+            base.Reset();
+        }
+
+        public override void Stop()
+        {
+            lock (clock) clock.Stop();
+        }
+
+        public override bool IsRunning
+        {
+            get
+            {
+                lock (clock) return clock.IsRunning;
+            }
+        }
+
+        public override double CurrentTime
+        {
+            get
+            {
+                lock (clock) return Math.Min(Length, seekOffset + clock.CurrentTime);
+            }
+        }
+
+        protected override void UpdateState()
+        {
+            base.UpdateState();
+
+            lock (clock)
+            {
+                if (clock.IsRunning && CurrentTime >= Length)
+                {
+                    if (Looping)
+                        Restart();
+                    else
+                    {
+                        Stop();
+                        RaiseCompleted();
+                    }
+                }
+            }
+        }
+
+        /*internal override void OnStateChanged()
+        {
+            base.OnStateChanged();
+
+            lock (clock)
+                clock.Rate = Rate;
+        }*/
+
+        protected override void Dispose(bool disposing)
+        {
+            if (!IsDisposed)
+                Stop();
+
+            base.Dispose(disposing);
+        }
     }
 }

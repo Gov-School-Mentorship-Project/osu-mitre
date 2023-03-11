@@ -57,9 +57,9 @@ namespace osu.Game.RemoteAudio
         {
             return new ActionModule("/state", HttpVerbs.Post, (ctx) =>
             {
-                Logger.Log("Received State From SpotifyServer");
-
                 var query = ctx.Request.QueryString;
+                Logger.Log($"Received State From SpotifyServer {query[0]} {query[1]} {query[2]}");
+
                 if (query[2] == null)
                     return ctx.SendDataAsync(HttpStatusCode.BadRequest);
 

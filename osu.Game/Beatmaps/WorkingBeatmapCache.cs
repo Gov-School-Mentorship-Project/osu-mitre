@@ -25,6 +25,7 @@ using osu.Game.IO;
 using osu.Game.Skinning;
 using osu.Game.Storyboards;
 using osu.Game.RemoteAudio;
+using osu.Game.Beatmaps.RemoteAudio;
 
 namespace osu.Game.Beatmaps
 {
@@ -224,7 +225,10 @@ namespace osu.Game.Beatmaps
                     return null;
                 }
 
-                return RemoteBeatmapAudio.TrackFromReference(Metadata.RemoteAudioReference);
+                RemoteTrack t = RemoteBeatmapAudio.TrackFromReference(Metadata.RemoteAudioReference);
+                if (t is SpotifyTrack)
+                    SpotifyManager.Instance.currentTrack = t as SpotifyTrack;
+                return t;
             }
 
             protected override Waveform GetWaveform()

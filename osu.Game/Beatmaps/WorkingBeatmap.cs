@@ -71,7 +71,7 @@ namespace osu.Game.Beatmaps
         protected abstract IBeatmap GetBeatmap();
         protected abstract Texture GetBackground();
         protected abstract Track GetBeatmapTrack();
-        protected virtual Track GetRemoteTrack() => null;
+        protected virtual Track GetRemoteTrack() => null; // TODO: Make this an abstract member
 
         /// <summary>
         /// Creates a new skin instance for this beatmap.

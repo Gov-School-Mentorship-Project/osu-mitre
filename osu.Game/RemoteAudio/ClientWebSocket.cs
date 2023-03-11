@@ -62,6 +62,12 @@ namespace osu.Game.RemoteAudio
             return SendAll("play", uri);
         }
 
+        public Task Reset()
+        {
+            Logger.Log("sending reset to ws");
+            return SendAll("reset");
+        }
+
         public Task Resume()
         {
             Logger.Log("sending resume to ws");

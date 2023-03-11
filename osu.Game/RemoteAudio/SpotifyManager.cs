@@ -40,7 +40,7 @@ namespace osu.Game.RemoteAudio
 
         // Web SDK
         private ClientWebSocket socket;
-        public SpotifyTrack? currentTrack;
+        public SpotifyTrack? currentTrack; // TODO: Bring this out to RemoteAudioManager class
         public bool ready = false; // Has the web playback connected and has the device been transfered?
         public string? deviceId;
 
@@ -83,7 +83,7 @@ namespace osu.Game.RemoteAudio
             ready = true;
         }
 
-        public void Play(string reference) // Opens the provided input in Spotify. Checks if URL or URI is in valid format, but not if it links to an actual track
+        public void Play(string reference, int positionMs)
         {
             if (!ready || spotify == null)
             {
@@ -92,8 +92,22 @@ namespace osu.Game.RemoteAudio
             }
 
             Logger.Log($"Playing {reference} from SpotifyManager");
-            PlayerResumePlaybackRequest resume = new PlayerResumePlaybackRequest() { Uris = new List<string> { reference } };
+            PlayerResumePlaybackRequest resume = new PlayerResumePlaybackRequest() {
+                Uris = new List<string> { reference },
+                PositionMs = positionMs
+            };
             spotify.Player.ResumePlayback(resume);
+        }
+
+        public void Reset()
+        {
+            if (!ready || spotify == null)
+            {
+                Logger.Log("Cannot Play Until Web Device Is Registered");
+                return;
+            }
+
+            socket.Reset();
         }
 
         public void Resume()
@@ -231,11 +245,21 @@ namespace osu.Game.RemoteAudio
 
             PKCEAuthenticator authenticator = new PKCEAuthenticator(clientId, response);
 
-            /*authenticator.TokenRefreshed += (sender, response) =>
+            authenticator.TokenRefreshed += (sender, response) =>
             {
-                log.Debug("PKCE Token Refreshed!!!");
-                SaveAuthorization(response);
-            };*/
+                Logger.Log("PKCE Token Refreshed!!!");
+                if (authentication == null)
+                    return;
+
+                authentication.Token.Value = new OAuthToken() {
+                    AccessToken = response.AccessToken,
+                    ExpiresIn = response.ExpiresIn,
+                    RefreshToken = response.RefreshToken
+                };
+            };
+
+            if (response.ExpiresIn < 0)
+                return;
 
             SpotifyClientConfig clientConfig = SpotifyClientConfig.CreateDefault().WithAuthenticator(authenticator);
 
