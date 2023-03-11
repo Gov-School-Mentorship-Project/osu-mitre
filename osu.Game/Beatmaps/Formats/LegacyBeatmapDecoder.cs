@@ -435,6 +435,7 @@ namespace osu.Game.Beatmaps.Formats
 
                 controlPoint.BeatLength = beatLength;
                 controlPoint.TimeSignature = timeSignature;
+                controlPoint.OmitFirstBarLine = omitFirstBarSignature;
 
                 addControlPoint(time, controlPoint, true);
             }
@@ -451,7 +452,6 @@ namespace osu.Game.Beatmaps.Formats
             var effectPoint = new EffectControlPoint
             {
                 KiaiMode = kiaiMode,
-                OmitFirstBarLine = omitFirstBarSignature,
             };
 
             // osu!taiko and osu!mania use effect points rather than difficulty points for scroll speed adjustments.
