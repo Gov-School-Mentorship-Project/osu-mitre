@@ -68,10 +68,12 @@ namespace osu.Game.RemoteAudio
             return SendAll("reset");
         }
 
-        public Task Resume()
+        public Task Resume(int positionMs)
         {
             Logger.Log("sending resume to ws");
-            return SendAll("resume");
+            TimeSpan pos = TimeSpan.FromMilliseconds(positionMs);
+            long timestamp = DateTimeOffset.Now.Subtract(pos).ToUnixTimeMilliseconds();
+            return SendAll("resume", timestamp.ToString());
         }
 
         public Task Pause()

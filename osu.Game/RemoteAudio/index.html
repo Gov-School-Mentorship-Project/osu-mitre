@@ -216,9 +216,13 @@
                     });
                     break;
                 case 'resume':
-                    player.resume().then(() => {
-                        console.log("resumed!");
-                    });
+                    let timestamp = parseInt(data[1]);
+                    let progress = timestamp - Date.now();
+                    player.seek(progress).then(() => {
+                        player.resume().then(() => {
+                            console.log("resumed!");
+                        });
+                    })
                     break;
                 default:
                     console.log("invalid web socket message", m.data);

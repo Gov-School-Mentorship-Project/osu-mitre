@@ -110,7 +110,7 @@ namespace osu.Game.RemoteAudio
             socket.Reset();
         }
 
-        public void Resume()
+        public void Resume(int positionMs)
         {
             if (!ready || spotify == null)
             {
@@ -118,7 +118,7 @@ namespace osu.Game.RemoteAudio
                 return;
             }
 
-            socket.Resume();
+            socket.Resume(positionMs);
         }
 
         public void Stop()

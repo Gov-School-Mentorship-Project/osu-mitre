@@ -33,6 +33,7 @@ namespace osu.Game.Beatmaps.RemoteAudio
             : base(30000, reference, name)
         {
             Logger.Log($"Creating Track: {reference}");
+            SpotifyManager.Instance.Play(reference, (int)CurrentTime);
             //SpotifyManager.Instance.Play(reference); // TODO: Figure out where begin the web player
         }
 
@@ -58,7 +59,7 @@ namespace osu.Game.Beatmaps.RemoteAudio
             pendingStateUpdate = true;
 
             SpotifyManager.Instance.currentTrack = this;
-            SpotifyManager.Instance.Play(reference, (int)CurrentTime);
+            SpotifyManager.Instance.Resume((int)CurrentTime);
         }
 
         public override void Reset()
