@@ -110,6 +110,7 @@ namespace osu.Game.Beatmaps.RemoteAudio
                         Restart();
                     else
                     {
+                        Logger.Log("completed track, should stop now :)");
                         Stop();
                         RaiseCompleted();
                     }

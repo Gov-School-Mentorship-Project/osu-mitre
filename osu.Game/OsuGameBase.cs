@@ -577,6 +577,7 @@ namespace osu.Game
             if (IsLoaded && !ThreadSafety.IsUpdateThread)
                 throw new InvalidOperationException("Global beatmap bindable must be changed from update thread.");
 
+            beatmap.OldValue.Track.Stop();
             Logger.Log($"Game-wide working beatmap updated to {beatmap.NewValue}");
         }
 

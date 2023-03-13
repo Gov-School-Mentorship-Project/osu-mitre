@@ -48,6 +48,7 @@ namespace osu.Game.RemoteAudio
 
         protected Task SendAll(string tag, string? data)
         {
+            Logger.Log($"sending {tag}:{data} to web socket");
             if (data == null)
                 return BroadcastAsync(tag);
             return BroadcastAsync($"{tag}:{data}");
@@ -57,36 +58,35 @@ namespace osu.Game.RemoteAudio
 
         public Task PlayTrack(string uri)
         {
-            // does this need to be convreted to json?
-            Logger.Log("sending play request to ws");
             return SendAll("play", uri);
         }
 
         public Task Reset()
         {
-            Logger.Log("sending reset to ws");
             return SendAll("reset");
         }
 
         public Task Resume(int positionMs)
         {
-            Logger.Log("sending resume to ws");
             TimeSpan pos = TimeSpan.FromMilliseconds(positionMs);
             long timestamp = DateTimeOffset.Now.Subtract(pos).ToUnixTimeMilliseconds();
+            Logger.Log($"should resume at {positionMs}");
             return SendAll("resume", timestamp.ToString());
         }
 
         public Task Pause()
         {
-            Logger.Log("sending pause to ws");
             return SendAll("pause");
         }
 
         public Task SeekTo(long ms)
         {
-            Logger.Log("sending seek to to ws");
             return SendAll("seek", ms.ToString());
         }
 
+        public Task SetVolume(double volume)
+        {
+            return SendAll("volume", Math.Round(volume, 4).ToString());
+        }
     }
 }

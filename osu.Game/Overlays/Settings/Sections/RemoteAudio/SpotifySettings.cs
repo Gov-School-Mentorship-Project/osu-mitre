@@ -61,7 +61,7 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
                 }
             };
 
-            oauthButton.SetState(LoginButtonState.Login, Logout);
+            oauthButton.SetState(LoginButtonState.Login, Login);
             SpotifyManager.Instance.LoginStateUpdated += OnLoginStateUpdated;
         }
 

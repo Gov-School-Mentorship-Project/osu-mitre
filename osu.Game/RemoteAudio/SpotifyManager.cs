@@ -41,6 +41,8 @@ namespace osu.Game.RemoteAudio
         // Web SDK
         private ClientWebSocket socket;
         public SpotifyTrack? currentTrack; // TODO: Bring this out to RemoteAudioManager class
+        public string? currentReference = null;
+
         public bool ready = false; // Has the web playback connected and has the device been transfered?
         public string? deviceId;
 
@@ -91,11 +93,18 @@ namespace osu.Game.RemoteAudio
                 return;
             }
 
+            if (currentReference == reference)
+            {
+                Reset();
+                return;
+            }
+
             Logger.Log($"Playing {reference} from SpotifyManager");
             PlayerResumePlaybackRequest resume = new PlayerResumePlaybackRequest() {
                 Uris = new List<string> { reference },
-                PositionMs = positionMs
+                PositionMs = positionMs,
             };
+            currentReference = reference;
             spotify.Player.ResumePlayback(resume);
         }
 
@@ -121,11 +130,16 @@ namespace osu.Game.RemoteAudio
             socket.Resume(positionMs);
         }
 
-        public void Stop()
+        public void Stop(RemoteTrack track)
         {
             if (!ready || spotify == null)
             {
                 Logger.Log("Cannot Play Until Web Device Is Registered");
+                return;
+            }
+
+            if (track.reference != currentTrack?.reference) {
+                Logger.Log("Not stopping track because it is not playing");
                 return;
             }
 
@@ -143,6 +157,17 @@ namespace osu.Game.RemoteAudio
 
             Logger.Log($"Seeking to {ms} from SpotifyManager");
             socket.SeekTo(ms);
+        }
+
+        public void Volume(double volume)
+        {
+            if (!ready || spotify == null)
+            {
+                Logger.Log("Cannot Play Until Web Device Is Registered");
+                return;
+            }
+
+            socket.SetVolume(volume);
         }
 
         public void Login(CancellationTokenSource cts)

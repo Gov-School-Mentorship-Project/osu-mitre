@@ -17,7 +17,7 @@ namespace osu.Game.RemoteAudio
                 .WithMode(HttpListenerMode.EmbedIO))
                 .WithLocalSessionManager()
                 .WithCors()
-                .WithModule(CreateStateHandler())
+                //.WithModule(CreateStateHandler())
                 .WithModule(CreateDeviceHandler())
                 .WithModule(CreateAuthTokenHandler())
                 .WithModule(CreateInteractionHandler())
@@ -53,7 +53,7 @@ namespace osu.Game.RemoteAudio
             });
         }
 
-        private static ActionModule CreateStateHandler()
+        /*private static ActionModule CreateStateHandler()
         {
             return new ActionModule("/state", HttpVerbs.Post, (ctx) =>
             {
@@ -76,7 +76,7 @@ namespace osu.Game.RemoteAudio
 
                 return ctx.SendDataAsync(HttpStatusCode.OK);
             });
-        }
+        }*/
 
         private static ActionModule CreateInteractionHandler() // TODO: Get rid of this and handle this on the webpage
         {

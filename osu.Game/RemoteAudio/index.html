@@ -73,6 +73,7 @@
     var ws;
     var transferred = true;
     var trackUri;
+    var volumeCooldown = undefined;
     window.onSpotifyWebPlaybackSDKReady = () => {
 
         // Get the token from the main program API
@@ -138,7 +139,7 @@
                 return;
 
             // Send state to main program
-            fetch(httpUrl 
+            /*fetch(httpUrl 
             + "/state?ms=" + state.position.toString() 
             + "&timestamp=" + Date.now() 
             + "&paused=" + state.paused, 
@@ -146,7 +147,7 @@
                 method: 'POST'
             }).then((data) => {
                 console.log(data);
-            });
+            });*/
 
             // Update UI
             let track = state.track_window.current_track;
@@ -189,7 +190,6 @@
 
         ws.addEventListener('message', (m) => {
             LogEvent("WS: ", m.data);
-            console.log("message received", m);
             let data = m.data.split(":");
             switch (data[0])
             {
@@ -217,12 +217,23 @@
                     break;
                 case 'resume':
                     let timestamp = parseInt(data[1]);
-                    let progress = timestamp - Date.now();
+                    let progress = Date.now() - timestamp;
+                    LogEvent("resume", progress);
                     player.seek(progress).then(() => {
                         player.resume().then(() => {
                             console.log("resumed!");
                         });
                     })
+                    break;
+                case 'volume':
+                    clearTimeout(volumeCooldown);
+                    volumeCooldown = setTimeout(() =>
+                    {
+                        let volume = parseFloat(data[1]);
+                        player.setVolume(volume).then(() => {
+                            console.log("volume updated");
+                        });
+                    }, 1000);
                     break;
                 default:
                     console.log("invalid web socket message", m.data);
