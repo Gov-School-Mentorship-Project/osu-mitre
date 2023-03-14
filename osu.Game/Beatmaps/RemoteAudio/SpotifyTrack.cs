@@ -22,7 +22,7 @@ namespace osu.Game.Beatmaps.RemoteAudio
             Logger.Log($"Creating Track: {reference}");
             SpotifyManager.Instance.Play(reference, (int)CurrentTime);
             SpotifyManager.Instance.Volume(AggregateVolume.Value);
-            Volume.BindValueChanged(VolumeChanged);
+            SpotifyManager.Instance.audio?.AggregateVolume.BindValueChanged(VolumeChanged);
             //SpotifyManager.Instance.Play(reference); // TODO: Figure out where begin the web player
         }
 

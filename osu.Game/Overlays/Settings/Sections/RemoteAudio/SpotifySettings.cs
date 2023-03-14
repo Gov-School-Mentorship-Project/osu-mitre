@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using osu.Framework.Allocation;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics;
+using osu.Framework.Audio;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
 using osu.Framework.Logging;
@@ -29,9 +30,9 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
         private CancellationTokenSource cts = null!;
 
         [BackgroundDependencyLoader]
-        private void load(OsuConfigManager config, INotificationOverlay notifications)
+        private void load(OsuConfigManager config, INotificationOverlay notifications, AudioManager audio)
         {
-            SpotifyManager.Init(notifications, config);
+            SpotifyManager.Init(notifications, config, audio);
             clientId = config.GetBindable<string>(OsuSetting.RemoteAudioSpotifyClientId);
             clientSecret = config.GetBindable<string>(OsuSetting.RemoteAudioSpotifyClientSecret);
 

@@ -11,7 +11,6 @@ using osu.Game.Beatmaps;
 using osu.Game.Overlays;
 using osu.Game.Localisation;
 using osu.Game.Graphics.UserInterfaceV2;
-using osu.Game.RemoteAudio;
 
 namespace osu.Game.Screens.Edit.Setup
 {
@@ -19,7 +18,6 @@ namespace osu.Game.Screens.Edit.Setup
     {
         private LabelledFileChooser audioTrackChooser = null!;
         private LabelledFileChooser backgroundChooser = null!;
-        private LabelledTextBox remoteAudioTextBox = null!;
 
         public override LocalisableString Title => EditorSetupStrings.ResourcesHeader;
 
@@ -58,7 +56,6 @@ namespace osu.Game.Screens.Edit.Setup
                     FixedLabelWidth = LABEL_WIDTH,
                     TabbableContentContainer = this
                 },
-                remoteAudioTextBox = createTextBox<LabelledTextBox>(new LocalisableString("Remote Audio"), ""),
             };
 
             if (!string.IsNullOrEmpty(working.Value.Metadata.BackgroundFile))
@@ -67,12 +64,8 @@ namespace osu.Game.Screens.Edit.Setup
             if (!string.IsNullOrEmpty(working.Value.Metadata.AudioFile))
                 audioTrackChooser.Current.Value = new FileInfo(working.Value.Metadata.AudioFile);
 
-            if (!string.IsNullOrEmpty(working.Value.Metadata.RemoteAudioReference))
-                remoteAudioTextBox.Current.Value = working.Value.Metadata.RemoteAudioReference;
-
             backgroundChooser.Current.BindValueChanged(backgroundChanged);
             audioTrackChooser.Current.BindValueChanged(audioTrackChanged);
-            remoteAudioTextBox.Current.BindValueChanged(audioReference => remoteAudioChanged(audioReference.NewValue, remoteAudioTextBox));
 
             updatePlaceholderText();
         }
@@ -84,7 +77,7 @@ namespace osu.Game.Screens.Edit.Setup
                 Label = label,
                 FixedLabelWidth = LABEL_WIDTH,
                 Current = { Value = initialValue },
-                TabbableContentContainer = this
+                TabbableContentContainer = this,
             };
 
         public bool ChangeBackgroundImage(FileInfo source)
@@ -163,19 +156,6 @@ namespace osu.Game.Screens.Edit.Setup
             updatePlaceholderText();
         }
 
-        private void remoteAudioChanged(string value, LabelledTextBox target)
-        {
-            value = value.Trim();
-            if (value == "" || RemoteBeatmapAudio.validateRemoteAudio(value))
-            {
-                target.Colour = Colour4.White;
-                working.Value.Metadata.RemoteAudioReference = value;
-            } else
-            {
-                target.Colour = new Colour4(0.95f, 0.45f, 0.45f, 1.0f);
-                // Could animate the box or something
-            }
-        }
 
         private void updatePlaceholderText()
         {

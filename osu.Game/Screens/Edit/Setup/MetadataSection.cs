@@ -4,11 +4,13 @@
 using System.Linq;
 using osu.Framework.Allocation;
 using osu.Framework.Graphics.UserInterface;
+using osu.Framework.Graphics;
 using osu.Framework.Localisation;
 using osu.Game.Beatmaps;
 using osu.Game.Graphics.UserInterfaceV2;
 using osu.Game.Resources.Localisation.Web;
 using osu.Game.Localisation;
+using osu.Game.RemoteAudio;
 
 namespace osu.Game.Screens.Edit.Setup
 {
@@ -24,6 +26,9 @@ namespace osu.Game.Screens.Edit.Setup
         private LabelledTextBox difficultyTextBox = null!;
         private LabelledTextBox sourceTextBox = null!;
         private LabelledTextBox tagsTextBox = null!;
+
+        private LabelledTextBox remoteAudioTextBox = null!;
+        private RoundedButton loadAudioInfoButton = null!;
 
         public override LocalisableString Title => EditorSetupStrings.MetadataHeader;
 
@@ -51,8 +56,18 @@ namespace osu.Game.Screens.Edit.Setup
                 creatorTextBox = createTextBox<LabelledTextBox>(EditorSetupStrings.Creator, metadata.Author.Username),
                 difficultyTextBox = createTextBox<LabelledTextBox>(EditorSetupStrings.DifficultyName, Beatmap.BeatmapInfo.DifficultyName),
                 sourceTextBox = createTextBox<LabelledTextBox>(BeatmapsetsStrings.ShowInfoSource, metadata.Source),
-                tagsTextBox = createTextBox<LabelledTextBox>(BeatmapsetsStrings.ShowInfoTags, metadata.Tags)
+                tagsTextBox = createTextBox<LabelledTextBox>(BeatmapsetsStrings.ShowInfoTags, metadata.Tags),
+
+                remoteAudioTextBox = createTextBox<LabelledTextBox>(new LocalisableString("Remote Audio"), metadata.RemoteAudioReference),
+                loadAudioInfoButton = new RoundedButton()
+                {
+                    Text = "Load Remote Audio Info",
+                    Action = LoadRemoteAudioInfo,
+                    RelativeSizeAxes = Axes.X,
+                },
             };
+
+            remoteAudioTextBox.Current.BindValueChanged(audioReference => remoteAudioChanged(audioReference.NewValue, remoteAudioTextBox));
 
             foreach (var item in Children.OfType<LabelledTextBox>())
                 item.OnCommit += onCommit;
@@ -117,7 +132,39 @@ namespace osu.Game.Screens.Edit.Setup
             Beatmap.Metadata.Source = sourceTextBox.Current.Value;
             Beatmap.Metadata.Tags = tagsTextBox.Current.Value;
 
+            Beatmap.Metadata.RemoteAudioReference = remoteAudioTextBox.Current.Value;
+
             Beatmap.SaveState();
+        }
+
+        private void remoteAudioChanged(string value, LabelledTextBox target)
+        {
+            value = value.Trim();
+            if (value == "" || RemoteBeatmapAudio.validateRemoteAudio(value))
+            {
+                target.Colour = Colour4.White;
+            } else
+            {
+                target.Colour = new Colour4(0.95f, 0.45f, 0.45f, 1.0f);
+            }
+        }
+
+        private async void LoadRemoteAudioInfo()
+        {
+            RemoteAudioInfo info = await RemoteBeatmapAudio.GetRemoteBeatmapInfo(remoteAudioTextBox.Current.Value).ConfigureAwait(false);
+            Schedule(() => {
+                ArtistTextBox.Current.Value = info.Artist;
+                TitleTextBox.Current.Value = info.Title;
+                Beatmap.BeatmapInfo.BPM = info.BPM;
+                Beatmap.BeatmapInfo.Length = info.Length;
+
+
+                /*Beatmaps.ControlPoints.ControlPoint cp = new Beatmaps.ControlPoints.TimingControlPoint();
+                Beatmap.ControlPointInfo.Add(0, cp);
+                Beatmap.ControlPointInfo.Add(info.Length, cp);*/ // TODO: Figure out how to load bmp and length
+
+                updateMetadata();
+            });
         }
     }
 }

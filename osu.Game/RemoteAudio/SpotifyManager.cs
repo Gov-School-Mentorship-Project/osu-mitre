@@ -17,6 +17,8 @@ using osu.Game.Overlays;
 using osu.Game.Overlays.Notifications;
 using SpotifyAPI.Web;
 using SpotifyAPI.Web.Auth;
+using System.Linq;
+using osu.Framework.Audio;
 
 namespace osu.Game.RemoteAudio
 {
@@ -25,6 +27,7 @@ namespace osu.Game.RemoteAudio
         public static SpotifyManager Instance { get; private set; }
         private OsuConfigManager? config;
         private INotificationOverlay? notification;
+        public AudioManager? audio;
 
         // OAuth
         private WebServer server;
@@ -59,13 +62,14 @@ namespace osu.Game.RemoteAudio
             //LoginStateUpdated = new EventHandler<LoginStateUpdateEventArgs>();
         }
 
-        public static void Init(INotificationOverlay notification, OsuConfigManager config)
+        public static void Init(INotificationOverlay notification, OsuConfigManager config, AudioManager audio)
         {
             Logger.Log($"Init SpotifyManager");
             //Instance = new SpotifyManager(notification, config);
             Instance.config = config;
             Instance.notification = notification;
             Instance.socket.notifications = notification;
+            Instance.audio = audio;
 
             Instance.clientId = config.Get<string>(OsuSetting.RemoteAudioSpotifyClientId);
             Instance.clientSecret = config.Get<string>(OsuSetting.RemoteAudioSpotifyClientSecret);
@@ -321,6 +325,25 @@ namespace osu.Game.RemoteAudio
             {
                 Logger.Log("logged out of spotify from OnTokenChanged()");
                 LoginStateUpdated?.Invoke(LoginState.LoggedOut, string.Empty);
+            }
+        }
+
+        public async Task<RemoteAudioInfo> GetRemoteBeatmapInfo(string reference)
+        {
+            if (spotify == null)
+                return new RemoteAudioInfo("spotify not connected", "spotify not connected", 60, 10000);
+
+            string[] parts = reference.Split(":");
+            string id = parts[parts.Length - 1];
+            try
+            {
+                FullTrack track = await spotify.Tracks.Get(id).ConfigureAwait(false);
+                TrackAudioFeatures features = await spotify.Tracks.GetAudioFeatures(id).ConfigureAwait(false);
+                IEnumerable<string> names = from artist in track.Artists select artist.Name;
+                return new RemoteAudioInfo(track.Name, string.Join(", ", names), features.Tempo, features.DurationMs);
+            } catch
+            {
+                return new RemoteAudioInfo("invalid reference", "invalid reference", 89, 10000);
             }
         }
     }
