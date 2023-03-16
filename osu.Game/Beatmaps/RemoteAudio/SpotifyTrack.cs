@@ -20,9 +20,8 @@ namespace osu.Game.Beatmaps.RemoteAudio
             : base(length, reference, name)
         {
             Logger.Log($"Creating Track: {reference}");
-            SpotifyManager.Instance.Play(reference, (int)CurrentTime);
-            SpotifyManager.Instance.Volume(AggregateVolume.Value);
-            SpotifyManager.Instance.audio?.AggregateVolume.BindValueChanged(VolumeChanged);
+            SpotifyManager.Instance.Play(reference, (int)(CurrentTime + seekOffset));
+            //SpotifyManager.Instance.Volume(SpotifyManager.Instance.audio?.AggregateVolume.Value ?? 1);
             //SpotifyManager.Instance.Play(reference); // TODO: Figure out where begin the web player
         }
 
@@ -30,10 +29,10 @@ namespace osu.Game.Beatmaps.RemoteAudio
         {
             Logger.Log($"Seeking to {seek} from SpotifyTrack at {CurrentTime}!!");
 
-            if (Math.Abs(seek - CurrentTime) > 2000 && seek > 0)
+            if (Math.Abs(seek - (CurrentTime + seekOffset)) > 2000 && seek + seekOffset > 0)
             {
                 Logger.Log("need to seek here");
-                SpotifyManager.Instance.Seek((long)seek);
+                SpotifyManager.Instance.Seek((long)(seek + seekOffset));
             }
             return base.Seek(seek);
         }
@@ -46,7 +45,7 @@ namespace osu.Game.Beatmaps.RemoteAudio
             base.Start();
 
             SpotifyManager.Instance.currentTrack = this;
-            SpotifyManager.Instance.Resume((int)CurrentTime);
+            SpotifyManager.Instance.Resume((int)(CurrentTime + seekOffset));
         }
 
         public override void Reset()
@@ -63,13 +62,7 @@ namespace osu.Game.Beatmaps.RemoteAudio
             SpotifyManager.Instance.Stop(this);
         }
 
-        private void VolumeChanged(ValueChangedEvent<double> volume)
-        {
-            Logger.Log($"Volume Changed {volume.NewValue}");
-            SpotifyManager.Instance.Volume(volume.NewValue); // TODO: Figure out why this isn't being called!!!
-        }
-
-        public void StateUpdate(long timestamp, long progress, bool paused)
+        public void StateUpdate(long timestamp, long progress, bool paused) // TODO: Remove this
         {
             Logger.Log($"State Updated from {CurrentTime} to {progress}");
             Logger.Log($"{CurrentTime} which should be {progress}");

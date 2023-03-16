@@ -71,6 +71,11 @@ namespace osu.Game.RemoteAudio
             Instance.socket.notifications = notification;
             Instance.audio = audio;
 
+            //BindableNumber<double> globalVolume = audio.Volume.GetBoundCopy();
+            //globalVolume.BindValueChanged(Instance.VolumeChanged);
+            audio.VolumeTrack.BindValueChanged(Instance.VolumeChanged);
+            audio.AggregateVolume.BindValueChanged(Instance.VolumeChanged);
+
             Instance.clientId = config.Get<string>(OsuSetting.RemoteAudioSpotifyClientId);
             Instance.clientSecret = config.Get<string>(OsuSetting.RemoteAudioSpotifyClientSecret);
             Instance.authentication = new OAuthSpotify(Instance.clientId, Instance.clientSecret, "https://api.spotify.com/v1");
@@ -99,8 +104,12 @@ namespace osu.Game.RemoteAudio
 
             if (currentReference == reference)
             {
+                Logger.Log("not playing becasue it is already playing ");
                 Reset();
                 return;
+            } else
+            {
+                Logger.Log($"Changing from {currentReference} to {reference}");
             }
 
             Logger.Log($"Playing {reference} from SpotifyManager");
@@ -172,6 +181,12 @@ namespace osu.Game.RemoteAudio
             }
 
             socket.SetVolume(volume);
+        }
+
+        public void Volume()
+        {
+            if (Instance.audio != null)
+                socket.SetVolume(Instance.audio.VolumeTrack.Value);
         }
 
         public void Login(CancellationTokenSource cts)
@@ -326,6 +341,11 @@ namespace osu.Game.RemoteAudio
                 Logger.Log("logged out of spotify from OnTokenChanged()");
                 LoginStateUpdated?.Invoke(LoginState.LoggedOut, string.Empty);
             }
+        }
+
+        private void VolumeChanged(ValueChangedEvent<double> _)
+        {
+            Volume(audio?.AggregateVolume.Value * audio?.VolumeTrack.Value ?? 0);
         }
 
         public async Task<RemoteAudioInfo> GetRemoteBeatmapInfo(string reference)

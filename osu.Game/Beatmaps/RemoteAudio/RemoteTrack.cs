@@ -18,7 +18,7 @@ namespace osu.Game.Beatmaps.RemoteAudio
     {
         private readonly StopwatchClock clock = new StopwatchClock();
 
-        private double seekOffset;
+        protected double seekOffset;
 
         public string reference;
 
