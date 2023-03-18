@@ -21,8 +21,8 @@ namespace osu.Game.RemoteAudio
 
         public static RemoteTrack? TrackFromReference(string reference, double length)
         {
-            if (SpotifyBeatmapAudio.validateRemoteAudio(reference, out _))
-                return new SpotifyTrack(reference, length);
+            if (SpotifyBeatmapAudio.validateRemoteAudio(reference, out string convertedReference))
+                return new SpotifyTrack(convertedReference, length);
 
             return null;
         }

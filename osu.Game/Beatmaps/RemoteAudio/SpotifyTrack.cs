@@ -11,6 +11,7 @@ using EmbedIO;
 using EmbedIO.Actions;
 using osu.Game.RemoteAudio;
 using osu.Framework.Bindables;
+using osu.Framework.Allocation;
 
 namespace osu.Game.Beatmaps.RemoteAudio
 {

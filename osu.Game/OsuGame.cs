@@ -64,6 +64,7 @@ using osu.Game.Skinning;
 using osu.Game.Updater;
 using osu.Game.Users;
 using osu.Game.Utils;
+using osu.Game.RemoteAudio;
 using osuTK.Graphics;
 using Sentry;
 
@@ -822,6 +823,7 @@ namespace osu.Game
                 return string.Join(" / ", combinations);
             };
 
+            SpotifyManager.Init(Notifications, LocalConfig, Audio);
             Container logoContainer;
             BackButton.Receptor receptor;
 

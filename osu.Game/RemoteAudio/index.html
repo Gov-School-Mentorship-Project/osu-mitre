@@ -15,7 +15,7 @@
             margin: 0;
             background-repeat: no-repeat;
             background-attachment: fixed;
-            background-image: linear-gradient(to bottom right, rgba(89,79,78,255), rgba(24,24,24,255));
+            background-image: linear-gradient(to bottom right, rgba(89,79,78,1), rgba(24,24,24,1));
         }
 
         img {
@@ -28,7 +28,7 @@
 
         h2 {
             margin-left: 30%;
-            color: rgba(254,254,252,255);
+            color: rgba(254,254,252,1);
         }
         
         #progress {
@@ -40,58 +40,127 @@
 
         p {
             margin-left: 30%;
-            color: rgba(194,193,191,255);
+            color: rgba(194,193,191,1);
         }
 
-        #logContainer
-        {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 300px;
-            height: 400px;
-            overflow-y: scroll;
-            overflow-wrap: break-word;
-            -ms-overflow-style: none; 
-            scrollbar-width: none;
+        #interact {
+            margin: 50px;
         }
 
-        #logContainer::-webkit-scrollbar
-        {
-            display: none;
+        #setupProgress {
+            display: flex;
+            position: absolute; 
+            top: 0px;
+            left: 0px;
+            right: 0px;
+            height: 30px;
+            background-color: rgba(194,193,191,.4);
+            gap: 10px;
+        }
+
+        #setupProgress .label {
+            display: flex;
+            height: 100%;
+            flex-grow: 1;
+            text-align: center;
+            line-height: 100%;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #setupProgress .label[state="not-started"] {
+            background-color: grey;
+        }
+
+        #setupProgress .label[state="pending"] {
+            background-color: blue;
+        }
+
+        #setupProgress .label[state="complete"] {
+            background-color: green;
+        }
+
+        #setupProgress .label[state="error"] {
+            background-color: red;
+        }
+
+        #setupProgress .label[state="error"]::after {
+            background-color: red;
+            content: "(Click to Retry)";
         }
 
     </style>
   </head>
   <body>
-    <script src="https://sdk.scdn.co/spotify-player.js"></script>
     <script defer>
-
     var httpUrl = "http://localhost:9999";
     var token;
     var player;
     var ws;
     var transferred = true;
     var trackUri;
-    var volumeCooldown = undefined;
-    window.onSpotifyWebPlaybackSDKReady = () => {
+    var volumeCooldown = undefined;   
+    var timelineIdx = 0;
+    var timeline = [loadSdk, getToken, connectToWebSocket];
 
-        // Get the token from the main program API
+    nextStep();
+    function nextStep()
+    {
+        if (timelineIdx >= timeline.Length)
+            return;
+
+        console.log("next step", timelineIdx);
+        timeline[timelineIdx]();
+        timelineIdx++;
+    }
+
+    function retry()
+    {
+        timelineIdx--;
+        nextStep();
+    }
+
+
+    function loadSdk()
+    {
+        let sdk = document.createElement("script");
+        sdk.setAttribute('src', "https://sdk.scdn.co/spotify-player.js" );
+        sdk.addEventListener("onloadstart", () => UpdateBarState('spotifySDK', 'started'));
+        sdk.addEventListener("onerror", () => UpdateBarState('spotifySDK', 'error'));
+        window.onSpotifyWebPlaybackSDKReady = () => {
+            sdkLoaded();
+            nextStep();
+        }
+        document.body.appendChild(sdk);
+    }
+
+    function getToken()
+    {
+        UpdateBarState('getToken', 'started');
         fetch(httpUrl + "/token")
         .then((res) => res.json())
         .then((data) => {
             token = data;
             player.connect();
             console.log("Connected with token: " + data);
+            UpdateBarState('getToken', 'complete');
+            //nextStep();
         })
         .catch((err) => {
             console.log("Server is not open yet: " + err);
+            UpdateBarState('getToken', 'error');
         });
+    }
+
+    function sdkLoaded() {
+        UpdateBarState('spotifySDK', 'complete')
+        // Get the token from the main program API
         
         // Use token to create the Spotify player
+        console.log("creating player");
         player = new Spotify.Player({
             name: 'Web Playback SDK Quick Start Player',
-            getOAuthToken: cb => {cb(token); }
+            getOAuthToken: cb => {cb(token);}
         });
 
         // Webpage is registered as a device
@@ -102,25 +171,33 @@
                 method: 'POST'
             }).then((data) => {
                 transferred = true; 
-                ConnectToWebSocket();
+                UpdateBarState('device', 'complete');
+                nextStep();
+            }).catch((e) => {
+                UpdateBarState('device', 'error')
+                console.log("error device", e);
             });
         });
 
         // erorrs
         player.addListener('not_ready', ({ device_id }) => {
             console.log('Device ID has gone offline', device_id);
+            UpdateBarState("device", "error");
         });
 
         player.addListener('initialization_error', ({ message }) => { 
             console.error(message);
+            UpdateBarState("getToken", "error");
         });
 
         player.addListener('authentication_error', ({ message }) => {
             console.error(message);
+            UpdateBarState("getToken", "error");
         });
 
         player.addListener('account_error', ({ message }) => {
             console.error(message);
+            UpdateBarState("getToken", "error");
         });
 
         // Playback events
@@ -137,17 +214,6 @@
         player.addListener("player_state_changed", (state => {
             if (!state)
                 return;
-
-            // Send state to main program
-            /*fetch(httpUrl 
-            + "/state?ms=" + state.position.toString() 
-            + "&timestamp=" + Date.now() 
-            + "&paused=" + state.paused, 
-            {
-                method: 'POST'
-            }).then((data) => {
-                console.log(data);
-            });*/
 
             // Update UI
             let track = state.track_window.current_track;
@@ -169,7 +235,6 @@
             trackUri = track.uri;
             titleElem.innerText = track.name;
             artistElem.innerText = artists;
-            LogEvent("Play", track.name);
             document.getElementById("album").setAttribute("src", track.album.images[0].url);
         }));
 
@@ -184,12 +249,15 @@
         };
     }
 
-    function ConnectToWebSocket()
+    function connectToWebSocket()
     {
+        UpdateBarState('socket', 'started');
         ws = new WebSocket("ws://localhost:9999/connect");
+        ws.onopen = () => UpdateBarState('socket', 'complete');
+        ws.onerror = () => UpdateBarState('socket', 'error');
+        ws.onclose = () => Disconnect(); // TODO: Go back to the device or send the device over when connected
 
         ws.addEventListener('message', (m) => {
-            LogEvent("WS: ", m.data);
             let data = m.data.split(":");
             switch (data[0])
             {
@@ -218,22 +286,17 @@
                 case 'resume':
                     let timestamp = parseInt(data[1]);
                     let progress = Date.now() - timestamp;
-                    LogEvent("resume", progress);
                     player.seek(progress).then(() => {
                         player.resume().then(() => {
                             console.log("resumed!");
                         });
-                    })
+                    });
                     break;
                 case 'volume':
-                    clearTimeout(volumeCooldown);
-                    volumeCooldown = setTimeout(() =>
-                    {
-                        let volume = parseFloat(data[1]);
-                        player.setVolume(volume).then(() => {
-                            console.log("volume updated");
-                        });
-                    }, 1000);
+                    let volume = parseFloat(data[1]);
+                    player.setVolume(volume).then(() => {
+                        console.log("volume updated", volume);
+                    });
                     break;
                 default:
                     console.log("invalid web socket message", m.data);
@@ -242,9 +305,23 @@
         console.log(ws);
     }
 
-    function LogEvent(eventType, message)
+    function Disconnect()
     {
-        document.getElementById("log").innerHTML += '</br>' + "<em>" + eventType + "</em>: " + message
+       timelineIdx = 1;  
+        UpdateBarState("getToken", "error");
+        UpdateBarState("device", "not-started");
+        UpdateBarState("socket", "not-started");
+    }
+
+    function UpdateBarState(id, state)
+    {
+        console.log("Update", id, state);
+        let label = document.getElementById(id);
+        label.setAttribute("state", state);
+        if (state == "error")
+            label.onclick = retry;
+        else 
+            label.removeEventListener('onclick', retry);
     }
 
     </script> 
@@ -255,8 +332,19 @@
         <p id="artist"></p>
         <input type="range" id="progress"/>
         <p id="timer"></p>
-        <div id="logContainer">
-            <p id="log"><span style="text-align: center; display: inline-block; width: 100%">Logs</span></p>
+    </div>
+    <div id="setupProgress">
+        <div class="label" id="spotifySDK" state="not-started">
+            Load Spotify SDK
+        </div >
+        <div class="label" id="getToken" state="not-started">
+            Get Token 
+        </div>
+        <div class="label" id="device" state="not-started">
+            Device
+        </div>
+        <div class="label" id="socket" state="not-started">
+            Socket
         </div>
     </div>
     <div id="interactContainer">

@@ -26,7 +26,7 @@ namespace osu.Game.RemoteAudio
     {
         public static SpotifyManager Instance { get; private set; }
         private OsuConfigManager? config;
-        private INotificationOverlay? notification;
+        private NotificationOverlay? notification;
         public AudioManager? audio;
 
         // OAuth
@@ -62,7 +62,7 @@ namespace osu.Game.RemoteAudio
             //LoginStateUpdated = new EventHandler<LoginStateUpdateEventArgs>();
         }
 
-        public static void Init(INotificationOverlay notification, OsuConfigManager config, AudioManager audio)
+        public static void Init(NotificationOverlay notification, OsuConfigManager config, AudioManager audio)
         {
             Logger.Log($"Init SpotifyManager");
             //Instance = new SpotifyManager(notification, config);

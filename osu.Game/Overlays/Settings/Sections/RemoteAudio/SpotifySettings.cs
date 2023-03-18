@@ -30,9 +30,9 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
         private CancellationTokenSource cts = null!;
 
         [BackgroundDependencyLoader]
-        private void load(OsuConfigManager config, INotificationOverlay notifications, AudioManager audio)
+        private void load(OsuConfigManager config /*, INotificationOverlay notifications, AudioManager audio*/)
         {
-            SpotifyManager.Init(notifications, config, audio);
+            //SpotifyManager.Init(notifications, config, audio);
             clientId = config.GetBindable<string>(OsuSetting.RemoteAudioSpotifyClientId);
             clientSecret = config.GetBindable<string>(OsuSetting.RemoteAudioSpotifyClientSecret);
 

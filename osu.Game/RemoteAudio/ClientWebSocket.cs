@@ -13,7 +13,7 @@ namespace osu.Game.RemoteAudio
 {
     public class ClientWebSocket : WebSocketModule
     {
-        public INotificationOverlay? notifications;
+        public NotificationOverlay? notifications;
 
         private RateLimitedAction<double> volumeDebouncer;
 
