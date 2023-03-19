@@ -30,7 +30,7 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
         private CancellationTokenSource cts = null!;
 
         [BackgroundDependencyLoader]
-        private void load(OsuConfigManager config /*, INotificationOverlay notifications, AudioManager audio*/)
+        private async void load(OsuConfigManager config /*, INotificationOverlay notifications, AudioManager audio*/)
         {
             //SpotifyManager.Init(notifications, config, audio);
             clientId = config.GetBindable<string>(OsuSetting.RemoteAudioSpotifyClientId);
@@ -62,7 +62,11 @@ namespace osu.Game.Overlays.Settings.Sections.RemoteAudio
                 }
             };
 
-            oauthButton.SetState(LoginButtonState.Login, Login);
+            string? username = await SpotifyManager.Instance.GetName().ConfigureAwait(false);
+            if (username != null)
+                oauthButton.SetState(LoginButtonState.Logout, Logout, username);
+            else
+                oauthButton.SetState(LoginButtonState.Login, Login);
             SpotifyManager.Instance.LoginStateUpdated += OnLoginStateUpdated;
         }
 

@@ -18,9 +18,9 @@ namespace osu.Game.RemoteAudio
                 .WithLocalSessionManager()
                 .WithCors()
                 //.WithModule(CreateStateHandler())
-                .WithModule(CreateDeviceHandler())
+                /*.WithModule(CreateDeviceHandler())
                 .WithModule(CreateAuthTokenHandler())
-                .WithModule(CreateInteractionHandler())
+                .WithModule(CreateInteractionHandler())*/ // TODO: Test if these are necessary and remove them as needed
                 .WithModule(socket);
             return (server, socket);
         }
