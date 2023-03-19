@@ -44,7 +44,7 @@ namespace osu.Game.RemoteAudio
         {
             return new ActionModule("/token", HttpVerbs.Get, (ctx) =>
             {
-                string? accessToken = SpotifyManager.Instance.authentication?.Token?.Value?.AccessToken;
+                string? accessToken = SpotifyManager.Instance.authentication?.Token.Value.AccessToken;
                 if (accessToken == null)
                     return ctx.SendDataAsync(HttpStatusCode.Unauthorized);
 

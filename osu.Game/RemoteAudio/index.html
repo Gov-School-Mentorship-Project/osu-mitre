@@ -8,26 +8,41 @@
             padding: 0; 
             margin: 0;
             font-family: Helvetica, sans-serif;
+            text-align: center;
+        }
+
+        html, body {
+            height: 100%;
         }
 
         body {
-            height: 100%;
             margin: 0;
             background-repeat: no-repeat;
             background-attachment: fixed;
             background-image: linear-gradient(to bottom right, rgba(89,79,78,1), rgba(24,24,24,1));
+            display: flex;
+            flex-direction: column;
+            background-color: grey;
+            justify-content: center;
+            align-items: center;
         }
 
+        #content
+        {
+            width: 100%;
+            height: 50%;
+        }
+        
         img {
             display: block;
             margin-left: auto;
             margin-right: auto;
-            width: 40%;
+            width: 50%;
             margin-top: 40px;
+            padding: 10px;
         }
 
         h2 {
-            margin-left: 30%;
             color: rgba(254,254,252,1);
         }
         
@@ -39,55 +54,82 @@
         }
 
         p {
-            margin-left: 30%;
             color: rgba(194,193,191,1);
         }
 
-        #interact {
-            margin: 50px;
-        }
-
-        #setupProgress {
+        #connectContainer
+        {
+            position: absolute;
             display: flex;
-            position: absolute; 
-            top: 0px;
-            left: 0px;
-            right: 0px;
-            height: 30px;
-            background-color: rgba(194,193,191,.4);
-            gap: 10px;
-        }
-
-        #setupProgress .label {
-            display: flex;
-            height: 100%;
-            flex-grow: 1;
-            text-align: center;
-            line-height: 100%;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #setupProgress .label[state="not-started"] {
+            flex-direction: column;
             background-color: grey;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+            width: 300px;
+            margin: 30px;
+            padding: 30px;
         }
 
-        #setupProgress .label[state="pending"] {
-            background-color: blue;
-        }
-
-        #setupProgress .label[state="complete"] {
+        #connectContainer #connectButton {
+            height: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 20px;
             background-color: green;
+            user-select: none;
         }
 
-        #setupProgress .label[state="error"] {
-            background-color: red;
+        #connectContainer #connectButton:hover {
+            filter: brightness(.9);
         }
 
-        #setupProgress .label[state="error"]::after {
-            background-color: red;
-            content: "(Click to Retry)";
+        #connectContainer #connectButton:active {
+            filter: brightness(.8);
         }
+
+        #connectContainer #connectionState {
+            color: black;
+            font-size: 20px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #connectContainer #connectionState[state="loading"] {
+            color: black;
+        }
+
+        #connectContainer #connectionState[state="error"] {
+            color: darkred;
+        }
+
+        #loader {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+        }
+
+        #loader.show:after {
+            content: " ";
+            display: block;
+            width: 30px;
+            height: 30px;
+            margin: 8px;
+            border-radius: 50%;
+            border: 6px solid #fff;
+            border-color: #fff transparent #fff transparent;
+            animation: lds-dual-ring 1.2s linear infinite;
+        }
+
+        @keyframes lds-dual-ring {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
 
     </style>
   </head>
@@ -100,60 +142,28 @@
     var transferred = true;
     var trackUri;
     var volumeCooldown = undefined;   
-    var timelineIdx = 0;
-    var timeline = [loadSdk, getToken, connectToWebSocket];
-
-    nextStep();
-    function nextStep()
-    {
-        if (timelineIdx >= timeline.Length)
-            return;
-
-        console.log("next step", timelineIdx);
-        timeline[timelineIdx]();
-        timelineIdx++;
-    }
-
-    function retry()
-    {
-        timelineIdx--;
-        nextStep();
-    }
-
 
     function loadSdk()
     {
+        if (document.getElementById('sdk'))
+        {
+            ws.send('token');
+            return;
+        }
         let sdk = document.createElement("script");
+        SetState("Loading Spotify SDK", "loading");
         sdk.setAttribute('src', "https://sdk.scdn.co/spotify-player.js" );
-        sdk.addEventListener("onloadstart", () => UpdateBarState('spotifySDK', 'started'));
-        sdk.addEventListener("onerror", () => UpdateBarState('spotifySDK', 'error'));
+        sdk.setAttribute('id', 'sdk');
+        sdk.addEventListener("onerror", () => SetState("Error Loading Spotify SDK", "error"));
         window.onSpotifyWebPlaybackSDKReady = () => {
             sdkLoaded();
-            nextStep();
+            ws.send('token');
         }
         document.body.appendChild(sdk);
     }
 
-    function getToken()
-    {
-        UpdateBarState('getToken', 'started');
-        fetch(httpUrl + "/token")
-        .then((res) => res.json())
-        .then((data) => {
-            token = data;
-            player.connect();
-            console.log("Connected with token: " + data);
-            UpdateBarState('getToken', 'complete');
-            //nextStep();
-        })
-        .catch((err) => {
-            console.log("Server is not open yet: " + err);
-            UpdateBarState('getToken', 'error');
-        });
-    }
-
     function sdkLoaded() {
-        UpdateBarState('spotifySDK', 'complete')
+        SetState('Connecting with spotify API', "loading");
         // Get the token from the main program API
         
         // Use token to create the Spotify player
@@ -166,38 +176,28 @@
         // Webpage is registered as a device
         player.addListener('ready', ({ device_id }) => {
             console.log('Ready with Device ID', device_id);
-            fetch(httpUrl + "/device?id=" + device_id,
-            {
-                method: 'POST'
-            }).then((data) => {
-                transferred = true; 
-                UpdateBarState('device', 'complete');
-                nextStep();
-            }).catch((e) => {
-                UpdateBarState('device', 'error')
-                console.log("error device", e);
-            });
+            ws.send('device:' + device_id);
+            SetState('Getting device', "loading");
         });
 
         // erorrs
         player.addListener('not_ready', ({ device_id }) => {
             console.log('Device ID has gone offline', device_id);
-            UpdateBarState("device", "error");
         });
 
         player.addListener('initialization_error', ({ message }) => { 
             console.error(message);
-            UpdateBarState("getToken", "error");
+            SetState('Error initializing Spotify API', 'error');
         });
 
         player.addListener('authentication_error', ({ message }) => {
             console.error(message);
-            UpdateBarState("getToken", "error");
+            SetState('Error authenticating Spotify API', 'error');
         });
 
         player.addListener('account_error', ({ message }) => {
             console.error(message);
-            UpdateBarState("getToken", "error");
+            SetState('Spotify arrount error', 'error');
         });
 
         // Playback events
@@ -237,47 +237,57 @@
             artistElem.innerText = artists;
             document.getElementById("album").setAttribute("src", track.album.images[0].url);
         }));
-
-
-        document.getElementById('interact').onclick = function() {
-            player.pause();
-            document.getElementById('interactContainer').style.display = "none";
-            document.getElementById('content').style.display = "block";
-            fetch(httpUrl + "/interact", {
-                method: 'POST'
-            });
-        };
     }
 
     function connectToWebSocket()
     {
-        UpdateBarState('socket', 'started');
+        SetState("Connecting To Web Socket", "loading");
         ws = new WebSocket("ws://localhost:9999/connect");
-        ws.onopen = () => UpdateBarState('socket', 'complete');
-        ws.onerror = () => UpdateBarState('socket', 'error');
-        ws.onclose = () => Disconnect(); // TODO: Go back to the device or send the device over when connected
+        ws.onopen = () => {
+            loadSdk();
+            SetState("Getting Access Token", "loading");
+        }
+        ws.onerror = () => SetState("Error Connecting to Game", "error");
+        ws.onclose = (e) => {
+            if (player != null)
+                Disconnect(); 
+        }
 
         ws.addEventListener('message', (m) => {
             let data = m.data.split(":");
             switch (data[0])
             {
-                case 'play':
-                    let uri = data[1]; 
-                    console.log("Don't know what to do with this " + data);
+                case 'token':
+                    token = data[1];
+                    console.log("token is ", token);
+                    if (token != "")
+                    {
+                        SetState("Connecting to Spotify with access token");
+                        player.connect().catch(() =>
+                        {
+                            SetState("Invalid Access Token", "error");
+                        });
+                    } else
+                    {
+                        SetState("Error getting token", "error");
+                    }
+                    break;
+                case 'device':
+                    FinishSetup();
                     break;
                 case 'seek':
                     let ms = parseInt(data[1]);
-                    player.seek(ms).then(() => {
+                    player?.seek(ms).then(() => {
                         console.log("seek to " + ms + "!");
                     });
                     break;
                 case 'pause':
-                    player.pause().then(() => {
+                    player?.pause().then(() => {
                         console.log("paused!");
                     });
                     break;
                 case 'reset':
-                    player.seek(0).then(() => {
+                    player?.seek(0).then(() => {
                         player.resume().then(() => {
                             console.log("reset!");
                         });
@@ -286,7 +296,7 @@
                 case 'resume':
                     let timestamp = parseInt(data[1]);
                     let progress = Date.now() - timestamp;
-                    player.seek(progress).then(() => {
+                    player?.seek(progress).then(() => {
                         player.resume().then(() => {
                             console.log("resumed!");
                         });
@@ -294,7 +304,7 @@
                     break;
                 case 'volume':
                     let volume = parseFloat(data[1]);
-                    player.setVolume(volume).then(() => {
+                    player?.setVolume(volume).then(() => {
                         console.log("volume updated", volume);
                     });
                     break;
@@ -307,21 +317,33 @@
 
     function Disconnect()
     {
-       timelineIdx = 1;  
-        UpdateBarState("getToken", "error");
-        UpdateBarState("device", "not-started");
-        UpdateBarState("socket", "not-started");
+
+        document.getElementById('connectContainer').style.display = "block";
+        document.getElementById('content').style.display = "none";
+        player?.pause().then(() => {
+            console.log("paused!");
+        });
+        SetState('Disconnected from Game', "error");
     }
 
-    function UpdateBarState(id, state)
+    function SetState(message, stateType)
     {
-        console.log("Update", id, state);
-        let label = document.getElementById(id);
-        label.setAttribute("state", state);
-        if (state == "error")
-            label.onclick = retry;
-        else 
-            label.removeEventListener('onclick', retry);
+        let cs = document.getElementById('connectionState');
+        cs.innerText = message;
+        cs.setAttribute("state", stateType);
+        let loader = document.getElementById('loader');
+        if (loader && stateType == 'error')
+        {
+            loader.classList.remove('show');
+        } else if (stateType == 'loading') {
+            loader.classList.add('show');
+        }
+    }
+
+    function FinishSetup()
+    {
+        document.getElementById('connectContainer').style.display = "none";
+        document.getElementById('content').style.display = "block";
     }
 
     </script> 
@@ -333,22 +355,10 @@
         <input type="range" id="progress"/>
         <p id="timer"></p>
     </div>
-    <div id="setupProgress">
-        <div class="label" id="spotifySDK" state="not-started">
-            Load Spotify SDK
-        </div >
-        <div class="label" id="getToken" state="not-started">
-            Get Token 
-        </div>
-        <div class="label" id="device" state="not-started">
-            Device
-        </div>
-        <div class="label" id="socket" state="not-started">
-            Socket
-        </div>
-    </div>
-    <div id="interactContainer">
-        <button id="interact">Click to get started!</button>
+    <div id="connectContainer">
+        <div id="connectButton" onclick="connectToWebSocket()">Click to connect to game</div>
+        <p id="connectionState">Not connected!</p>
+        <div id="loader"></div>
     </div>
   </body>
 </html>

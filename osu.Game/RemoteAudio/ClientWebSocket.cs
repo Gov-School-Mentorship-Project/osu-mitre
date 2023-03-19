@@ -8,6 +8,7 @@ using osu.Framework.Graphics.Sprites;
 using osu.Framework.Allocation;
 using System.Threading;
 using ThrottleDebounce;
+using System.Net;
 
 namespace osu.Game.RemoteAudio
 {
@@ -33,9 +34,16 @@ namespace osu.Game.RemoteAudio
             string text = Encoding.GetString(rxBuffer);
 
             // process the web sockets here!!!!
-
+            String[] data = text.Split(":");
+            switch (data[0])
+            {
+                case "token":
+                    return SendAll("token", SpotifyManager.Instance.authentication?.Token.Value.AccessToken);
+                case "device":
+                    SpotifyManager.Instance.TransferDevice(data[1]);
+                    return SendAll("device");
+            }
             return SendAsync(context, "Message Received");
-            //return base.OnMessageReceivedAsync(context, rxBuffer, rxResult);
         }
 
         protected override Task OnClientConnectedAsync(IWebSocketContext context)
@@ -98,27 +106,4 @@ namespace osu.Game.RemoteAudio
             volumeDebouncer.Invoke(volume);
         }
     }
-
-    /*public static class DebounceExtension
-    {
-        public static Action<T> Debounce<T>(this Action<T> func, int milliseconds = 300)
-        {
-            CancellationTokenSource? cancelTokenSource = null;
-
-            return arg =>
-            {
-                cancelTokenSource?.Cancel();
-                cancelTokenSource = new CancellationTokenSource();
-
-                Task.Delay(milliseconds, cancelTokenSource.Token)
-                    .ContinueWith(t =>
-                    {
-                        if (t.IsCompletedSuccessfully)
-                        {
-                            func(arg);
-                        }
-                    }, TaskScheduler.Default);
-            };
-        }
-    }*/
 }
