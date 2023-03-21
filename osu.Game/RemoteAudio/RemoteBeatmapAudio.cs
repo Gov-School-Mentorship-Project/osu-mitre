@@ -33,24 +33,31 @@ namespace osu.Game.RemoteAudio
             {
                 return await SpotifyManager.Instance.GetRemoteBeatmapInfo(newRef).ConfigureAwait(false);
             }
-            return new RemoteAudioInfo("Invalid reference", "Invalid Reference", 60, 1000);
+            return new RemoteAudioInfo("Invalid reference", "Invalid Reference", 60, 1000, 4, 4, 0);
         }
 
     }
 
     public struct RemoteAudioInfo
     {
-        public RemoteAudioInfo(string artist, string title, double bpm, double length)
+        public RemoteAudioInfo(string artist, string title, double bpm, double length, int timeNumerator, int timeDenominator, double start)
         {
             Artist = artist;
             Title = title;
             BPM = bpm;
             Length = length;
+            Start = start;
+
+            TimeSignatureNumerator = timeNumerator;
+            TimeSignatureDenominator = timeDenominator;
         }
 
         public string Artist { get; }
         public string Title { get; }
+        public int TimeSignatureNumerator { get; }
+        public int TimeSignatureDenominator { get; }
         public double BPM { get; }
         public double Length { get; }
+        public double Start { get; }
     }
 }

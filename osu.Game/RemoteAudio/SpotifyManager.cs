@@ -349,7 +349,7 @@ namespace osu.Game.RemoteAudio
         public async Task<RemoteAudioInfo> GetRemoteBeatmapInfo(string reference)
         {
             if (spotify == null)
-                return new RemoteAudioInfo("spotify not connected", "spotify not connected", 60, 10000);
+                return new RemoteAudioInfo("spotify not connected", "spotify not connected", 60, 10000, 4, 4, 0);
 
             string[] parts = reference.Split(":");
             string id = parts[parts.Length - 1];
@@ -357,11 +357,13 @@ namespace osu.Game.RemoteAudio
             {
                 FullTrack track = await spotify.Tracks.Get(id).ConfigureAwait(false);
                 TrackAudioFeatures features = await spotify.Tracks.GetAudioFeatures(id).ConfigureAwait(false);
+                TrackAudioAnalysis analysis = await spotify.Tracks.GetAudioAnalysis(id).ConfigureAwait(false);
                 IEnumerable<string> names = from artist in track.Artists select artist.Name;
-                return new RemoteAudioInfo(track.Name, string.Join(", ", names), features.Tempo, features.DurationMs);
+                double start = analysis.Beats.First().Start;
+                return new RemoteAudioInfo(track.Name, string.Join(", ", names), features.Tempo, features.DurationMs, features.TimeSignature, 4, start);
             } catch
             {
-                return new RemoteAudioInfo("invalid reference", "invalid reference", 89, 10000);
+                return new RemoteAudioInfo("invalid reference", "invalid reference", 60, 10000, 4, 4, 0);
             }
         }
     }

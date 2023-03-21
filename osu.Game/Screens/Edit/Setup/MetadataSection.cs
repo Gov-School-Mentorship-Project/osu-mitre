@@ -11,6 +11,9 @@ using osu.Game.Graphics.UserInterfaceV2;
 using osu.Game.Resources.Localisation.Web;
 using osu.Game.Localisation;
 using osu.Game.RemoteAudio;
+using osu.Game.Overlays;
+using osu.Game.Beatmaps.ControlPoints;
+using osu.Game.Beatmaps.Timing;
 
 namespace osu.Game.Screens.Edit.Setup
 {
@@ -29,6 +32,12 @@ namespace osu.Game.Screens.Edit.Setup
 
         private LabelledTextBox remoteAudioTextBox = null!;
         private RoundedButton loadAudioInfoButton = null!;
+
+        [Resolved]
+        private MusicController music { get; set; } = null!;
+
+        [Resolved]
+        private EditorBeatmap editorBeatmap { get; set; } = null!;
 
         public override LocalisableString Title => EditorSetupStrings.MetadataHeader;
 
@@ -155,14 +164,16 @@ namespace osu.Game.Screens.Edit.Setup
             Schedule(() => {
                 ArtistTextBox.Current.Value = info.Artist;
                 TitleTextBox.Current.Value = info.Title;
-                Beatmap.BeatmapInfo.BPM = info.BPM;
+
                 Beatmap.BeatmapInfo.Length = info.Length;
+                //editorBeatmap.BeatmapInfo.Length = info.Length;
 
+                var group = Beatmap.ControlPointInfo.GroupAt(info.Start, true);
+                group.Add(new TimingControlPoint() {BeatLength = 60000 / info.BPM, TimeSignature = new TimeSignature(info.TimeSignatureNumerator)});
 
-                /*Beatmaps.ControlPoints.ControlPoint cp = new Beatmaps.ControlPoints.TimingControlPoint();
-                Beatmap.ControlPointInfo.Add(0, cp);
-                Beatmap.ControlPointInfo.Add(info.Length, cp);*/ // TODO: Figure out how to load bmp and length
+                editorBeatmap.SaveState();
 
+                music.ReloadCurrentTrack();
                 updateMetadata();
             });
         }
