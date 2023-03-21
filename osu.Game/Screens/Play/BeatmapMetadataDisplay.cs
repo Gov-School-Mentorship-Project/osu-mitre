@@ -20,6 +20,8 @@ using osu.Game.Resources.Localisation.Web;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Screens.Play.HUD;
 using osuTK;
+using System.Linq;
+using osu.Game.Beatmaps.RemoteAudio;
 
 namespace osu.Game.Screens.Play
 {
@@ -51,8 +53,14 @@ namespace osu.Game.Screens.Play
             this.beatmap = beatmap;
             this.logoFacade = logoFacade;
 
-            this.mods = new Bindable<IReadOnlyList<Mod>>();
-            this.mods.BindTo(mods);
+            if (beatmap.Track is RemoteTrack)
+            {
+                this.mods = new Bindable<IReadOnlyList<Mod>>(mods.Value.Where(m => m is ModRateAdjust == false).ToList());
+            } else
+            {
+                this.mods = new Bindable<IReadOnlyList<Mod>>();
+                this.mods.BindTo(mods);
+            }
         }
 
         private IBindable<StarDifficulty?> starDifficulty;

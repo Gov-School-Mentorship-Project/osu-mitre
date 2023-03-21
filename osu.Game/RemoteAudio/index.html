@@ -320,6 +320,7 @@
         player?.pause().then(() => {
             console.log("paused!");
         });
+        player.disconnect();
         SetState('Disconnected from Game', "error");
     }
 

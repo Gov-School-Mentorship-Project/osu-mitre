@@ -40,6 +40,7 @@ using osu.Game.Screens.Ranking;
 using osu.Game.Skinning;
 using osu.Game.Users;
 using osuTK.Graphics;
+using osu.Game.Beatmaps.RemoteAudio;
 
 namespace osu.Game.Screens.Play
 {
@@ -197,7 +198,13 @@ namespace osu.Game.Screens.Play
         [BackgroundDependencyLoader(true)]
         private void load(AudioManager audio, OsuConfigManager config, OsuGameBase game, CancellationToken cancellationToken)
         {
-            var gameplayMods = Mods.Value.Select(m => m.DeepClone()).ToArray();
+            // Remote the rate modifying mods if it is a remote track
+            var gameplayMods = Beatmap.Value.Track is RemoteTrack ?
+                Mods.Value.
+                    Where(m => m is ModRateAdjust == false).
+                    Select(m => m.DeepClone()).ToArray() :
+                Mods.Value.
+                    Select(m => m.DeepClone()).ToArray();
 
             if (gameplayMods.Any(m => m is UnknownMod))
             {
@@ -529,6 +536,10 @@ namespace osu.Game.Screens.Play
 
                 try
                 {
+                    /*if (Beatmap.Value.Track is RemoteTrack)
+                        Logger.Log("Beatmap is a Remote Track and does not support mods!", level: LogLevel.Error);
+                    // TODO: Check where the little card for each mod is created and trace that to how it is stored in the WorkingBeatma
+                    var mods = Beatmap.Value.Track is RemoteTrack ? Array.Empty<Mod>() : gameplayMods;*/
                     playable = Beatmap.Value.GetPlayableBeatmap(ruleset.RulesetInfo, gameplayMods, cancellationToken);
                 }
                 catch (BeatmapInvalidForRulesetException)
@@ -537,7 +548,10 @@ namespace osu.Game.Screens.Play
                     rulesetInfo = Beatmap.Value.BeatmapInfo.Ruleset;
                     ruleset = rulesetInfo.CreateInstance();
 
-                    playable = Beatmap.Value.GetPlayableBeatmap(rulesetInfo, gameplayMods, cancellationToken);
+                    if (Beatmap.Value.Track is RemoteTrack)
+                        Logger.Log("Beatmap is a Remote Track and does not support mods!", level: LogLevel.Error);
+                    var mods = Beatmap.Value.Track is RemoteTrack ? Array.Empty<Mod>() : gameplayMods;
+                    playable = Beatmap.Value.GetPlayableBeatmap(rulesetInfo, mods, cancellationToken);
                 }
 
                 if (playable.HitObjects.Count == 0)
