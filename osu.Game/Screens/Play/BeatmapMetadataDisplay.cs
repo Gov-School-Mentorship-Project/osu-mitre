@@ -122,7 +122,7 @@ namespace osu.Game.Screens.Play
                                     Anchor = Anchor.Centre,
                                     FillMode = FillMode.Fill,
                                 },
-                                loading = new LoadingLayer(true)
+                                loading = new LoadingLayer(dimBackground: true, blockInput: false)
                             }
                         },
                         versionFlow = new FillFlowContainer
