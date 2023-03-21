@@ -71,8 +71,6 @@ namespace osu.Game.RemoteAudio
             Instance.socket.notifications = notification;
             Instance.audio = audio;
 
-            //BindableNumber<double> globalVolume = audio.Volume.GetBoundCopy();
-            //globalVolume.BindValueChanged(Instance.VolumeChanged);
             audio.VolumeTrack.BindValueChanged(Instance.VolumeChanged);
             audio.AggregateVolume.BindValueChanged(Instance.VolumeChanged);
 
@@ -343,9 +341,9 @@ namespace osu.Game.RemoteAudio
             }
         }
 
-        private void VolumeChanged(ValueChangedEvent<double> _)
+        public void VolumeChanged(ValueChangedEvent<double> _)
         {
-            Volume(audio?.AggregateVolume.Value * audio?.VolumeTrack.Value ?? 0);
+            Volume(audio?.AggregateVolume.Value * audio?.VolumeTrack.Value * currentTrack?.AggregateVolume.Value ?? 0);
         }
 
         public async Task<RemoteAudioInfo> GetRemoteBeatmapInfo(string reference)

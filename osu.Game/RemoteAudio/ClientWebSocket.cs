@@ -25,7 +25,7 @@ namespace osu.Game.RemoteAudio
             Logger.Log("created web socket");
 
             Action<double> originalFunc = (double volume) => SendAll("volume", Math.Round(volume, 4).ToString());
-            TimeSpan wait = TimeSpan.FromMilliseconds(15);
+            TimeSpan wait = TimeSpan.FromMilliseconds(100);
             volumeDebouncer = Debouncer.Debounce(originalFunc, wait, leading: false, trailing: true);
         }
 
@@ -65,7 +65,6 @@ namespace osu.Game.RemoteAudio
 
         protected Task SendAll(string tag, string? data)
         {
-            Logger.Log($"sending {tag}:{data} to web socket");
             if (data == null)
                 return BroadcastAsync(tag);
             return BroadcastAsync($"{tag}:{data}");
