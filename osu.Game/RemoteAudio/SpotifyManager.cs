@@ -349,7 +349,7 @@ namespace osu.Game.RemoteAudio
         public async Task<RemoteAudioInfo> GetRemoteBeatmapInfo(string reference)
         {
             if (spotify == null)
-                return new RemoteAudioInfo("spotify not connected", "spotify not connected", 60, 10000, 4, 4, 0);
+                return RemoteAudioInfo.DefaultError;
 
             string[] parts = reference.Split(":");
             string id = parts[parts.Length - 1];
@@ -358,12 +358,25 @@ namespace osu.Game.RemoteAudio
                 FullTrack track = await spotify.Tracks.Get(id).ConfigureAwait(false);
                 TrackAudioFeatures features = await spotify.Tracks.GetAudioFeatures(id).ConfigureAwait(false);
                 TrackAudioAnalysis analysis = await spotify.Tracks.GetAudioAnalysis(id).ConfigureAwait(false);
-                IEnumerable<string> names = from artist in track.Artists select artist.Name;
-                double start = analysis.Beats.First().Start;
-                return new RemoteAudioInfo(track.Name, string.Join(", ", names), features.Tempo, features.DurationMs, features.TimeSignature, 4, start);
-            } catch
+
+                List<Section> sections = analysis.Sections.Where(s => s.Tempo > 0 && s.TimeSignature > 0).Select(s => new Section(60000.0 / (double)s.Tempo, (double)s.Start, s.TimeSignature, 4)).ToList();
+                if (sections.Count == 0)
+                {
+                    sections.Add(new Section(1000.0, 0.0, 4, 4));
+                }
+
+                IEnumerable<string> artistNames = from artist in track.Artists select artist.Name;
+
+                return new RemoteAudioInfo(
+                    string.Join(", ", artistNames),
+                    track.Name,
+                    features.DurationMs,
+                    sections
+                    );
+            } catch (Exception e)
             {
-                return new RemoteAudioInfo("invalid reference", "invalid reference", 60, 10000, 4, 4, 0);
+                Logger.Log($"Error loading track info: {e}");
+                return RemoteAudioInfo.DefaultError;
             }
         }
     }

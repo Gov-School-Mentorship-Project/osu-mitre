@@ -168,8 +168,13 @@ namespace osu.Game.Screens.Edit.Setup
                 Beatmap.BeatmapInfo.Length = info.Length;
                 //editorBeatmap.BeatmapInfo.Length = info.Length;
 
-                var group = Beatmap.ControlPointInfo.GroupAt(info.Start, true);
-                group.Add(new TimingControlPoint() {BeatLength = 60000 / info.BPM, TimeSignature = new TimeSignature(info.TimeSignatureNumerator)});
+                osu.Framework.Logging.Logger.Log($"Loading {info.Title} which is {info.Length} long");
+                foreach (Section s in info.Sections)
+                {
+                    osu.Framework.Logging.Logger.Log($"New Section at {s.Start}ms and {s.BeatDuration}ms per beat");
+                    var group = Beatmap.ControlPointInfo.GroupAt(s.Start * 1000, true);
+                    group.Add(new TimingControlPoint() {BeatLength = s.BeatDuration, TimeSignature = new TimeSignature(s.TimeSignatureNumerator)});
+                }
 
                 editorBeatmap.SaveState();
 
