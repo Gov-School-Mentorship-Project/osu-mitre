@@ -1,37 +1,29 @@
-
-using System.Linq;
 using System;
-using System.Collections.Generic;
-using osu.Framework.Audio.Track;
-using osu.Framework.Timing;
-using System.Threading.Tasks;
-using System.Diagnostics;
 using osu.Framework.Logging;
-using EmbedIO;
-using EmbedIO.Actions;
 using osu.Game.RemoteAudio;
-using osu.Framework.Bindables;
-using osu.Framework.Allocation;
 
 namespace osu.Game.Beatmaps.RemoteAudio
 {
     public sealed class SpotifyTrack : RemoteTrack
     {
+        private bool startedOnRemote = false;
+
         public SpotifyTrack(string reference, double length, string name = "spotify")
             : base(length, reference, name)
         {
             Logger.Log($"Creating Track: {reference}");
-            SpotifyManager.Instance.Play(reference, (int)(CurrentTime + seekOffset));
+            //SpotifyManager.Instance.Play(reference, (int)(CurrentTime + seekOffset));
             AggregateVolume.BindValueChanged(SpotifyManager.Instance.VolumeChanged);
+            base.StartAsync();
             //SpotifyManager.Instance.Volume(SpotifyManager.Instance.audio?.AggregateVolume.Value ?? 1);
             //SpotifyManager.Instance.Play(reference); // TODO: Figure out where begin the web player
         }
 
         public override bool Seek(double seek)
         {
-            Logger.Log($"Seeking to {seek} from SpotifyTrack at {CurrentTime}!!");
+            Logger.Log($"Seeking to {seek} from SpotifyTrack at {CurrentTime}!! seekOffset is {seekOffset}");
 
-            if (Math.Abs(seek - (CurrentTime + seekOffset)) > 2000 && seek + seekOffset > 0)
+            if (seek + seekOffset > 0)
             {
                 Logger.Log("need to seek here");
                 SpotifyManager.Instance.Seek((long)(seek + seekOffset));
@@ -47,7 +39,11 @@ namespace osu.Game.Beatmaps.RemoteAudio
             base.Start();
 
             SpotifyManager.Instance.currentTrack = this;
-            SpotifyManager.Instance.Resume((int)(CurrentTime + seekOffset));
+
+            if (!startedOnRemote)
+                SpotifyManager.Instance.Play(reference, (int)(CurrentTime + seekOffset));
+            else
+                SpotifyManager.Instance.Resume((int)(CurrentTime + seekOffset));
         }
 
         public override void Reset()

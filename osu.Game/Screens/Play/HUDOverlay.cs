@@ -100,6 +100,8 @@ namespace osu.Game.Screens.Play
 
         private readonly List<Drawable> hideTargets;
 
+        public List<Type> DisabledMods;
+
         public HUDOverlay(DrawableRuleset drawableRuleset, IReadOnlyList<Mod> mods, bool alwaysShowLeaderboard = true)
         {
             Drawable rulesetComponents;
@@ -343,11 +345,22 @@ namespace osu.Game.Screens.Play
             Origin = Anchor.BottomRight,
         };
 
-        protected ModDisplay CreateModsContainer() => new ModDisplay
+        /*protected ModDisplay CreateModsContainer() => new ModDisplay
         {
             Anchor = Anchor.TopRight,
             Origin = Anchor.TopRight,
-        };
+            Incompatible = DisabledMods
+        };*/
+
+        protected ModDisplay CreateModsContainer() {
+            osu.Framework.Logging.Logger.Log($"there are {DisabledMods?.Count} disabled mods");
+            return  new ModDisplay
+            {
+                Anchor = Anchor.TopRight,
+                Origin = Anchor.TopRight,
+                Incompatible = DisabledMods
+            };
+        }
 
         protected PlayerSettingsOverlay CreatePlayerSettingsOverlay() => new PlayerSettingsOverlay();
 

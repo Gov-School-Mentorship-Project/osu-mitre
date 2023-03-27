@@ -7,6 +7,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -112,6 +113,7 @@ namespace osu.Game.Screens.Play
         private MusicController musicController { get; set; }
 
         public GameplayState GameplayState { get; private set; }
+        private Mod[] originalMods;
 
         private Ruleset ruleset;
 
@@ -199,12 +201,14 @@ namespace osu.Game.Screens.Play
         private void load(AudioManager audio, OsuConfigManager config, OsuGameBase game, CancellationToken cancellationToken)
         {
             // Remote the rate modifying mods if it is a remote track
+            originalMods = Mods.Value.Select(m => m.DeepClone()).ToArray();
             var gameplayMods = Beatmap.Value.Track is RemoteTrack ?
                 Mods.Value.
                     Where(m => m is ModRateAdjust == false).
                     Select(m => m.DeepClone()).ToArray() :
                 Mods.Value.
                     Select(m => m.DeepClone()).ToArray();
+            //var gameplayMods = Mods.Value.Select(m => m.DeepClone()).ToArray();
 
             if (gameplayMods.Any(m => m is UnknownMod))
             {
@@ -438,7 +442,7 @@ namespace osu.Game.Screens.Play
                     // display the cursor above some HUD elements.
                     DrawableRuleset.Cursor?.CreateProxy() ?? new Container(),
                     DrawableRuleset.ResumeOverlay?.CreateProxy() ?? new Container(),
-                    HUDOverlay = new HUDOverlay(DrawableRuleset, GameplayState.Mods, Configuration.AlwaysShowLeaderboard)
+                    HUDOverlay = new HUDOverlay(DrawableRuleset, originalMods, Configuration.AlwaysShowLeaderboard)
                     {
                         HoldToQuit =
                         {
@@ -452,7 +456,8 @@ namespace osu.Game.Screens.Play
                             IsCounting = false
                         },
                         Anchor = Anchor.Centre,
-                        Origin = Anchor.Centre
+                        Origin = Anchor.Centre,
+                        DisabledMods = (Beatmap.Value.Track is RemoteTrack) ? new List<Type>() {typeof(ModRateAdjust)} : new List<Type>()
                     },
                     skipIntroOverlay = new SkipOverlay(DrawableRuleset.GameplayStartTime)
                     {

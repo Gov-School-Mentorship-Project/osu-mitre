@@ -18,6 +18,8 @@ namespace osu.Game.Beatmaps.RemoteAudio
     {
         private readonly StopwatchClock clock = new StopwatchClock();
 
+        public override bool IsDummyDevice => false;
+
         protected double seekOffset;
 
         public string reference;

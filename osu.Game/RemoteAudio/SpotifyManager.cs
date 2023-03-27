@@ -46,7 +46,7 @@ namespace osu.Game.RemoteAudio
         public SpotifyTrack? currentTrack; // TODO: Bring this out to RemoteAudioManager class
         public string? currentReference = null;
 
-        public bool ready = false; // Has the web playback connected and has the device been transfered?
+        public bool transferedDevice = false; // Has the web playback connected and has the device been transfered?
         public string? deviceId;
 
         static SpotifyManager()
@@ -89,12 +89,12 @@ namespace osu.Game.RemoteAudio
                 return;
 
             spotify.Player.TransferPlayback(new PlayerTransferPlaybackRequest(new List<string> { deviceId }));
-            ready = true;
+            transferedDevice = true;
         }
 
         public void Play(string reference, int positionMs)
         {
-            if (!ready || spotify == null)
+            if (!transferedDevice || spotify == null)
             {
                 Logger.Log("Cannot Play Until Web device Is Registered");
                 return;
@@ -107,7 +107,7 @@ namespace osu.Game.RemoteAudio
                 return;
             } else
             {
-                Logger.Log($"Changing from {currentReference} to {reference}");
+                Logger.Log($"Changing from {currentReference} to {reference} at {positionMs}");
             }
 
             Logger.Log($"Playing {reference} from SpotifyManager");
@@ -121,7 +121,7 @@ namespace osu.Game.RemoteAudio
 
         public void Reset()
         {
-            if (!ready || spotify == null)
+            if (!transferedDevice || spotify == null)
             {
                 Logger.Log("Cannot Play Until Web Device Is Registered");
                 return;
@@ -132,7 +132,7 @@ namespace osu.Game.RemoteAudio
 
         public void Resume(int positionMs)
         {
-            if (!ready || spotify == null)
+            if (!transferedDevice || spotify == null)
             {
                 Logger.Log("Cannot Play Until Web Device Is Registered");
                 return;
@@ -143,7 +143,7 @@ namespace osu.Game.RemoteAudio
 
         public void Stop(RemoteTrack track)
         {
-            if (!ready || spotify == null)
+            if (!transferedDevice || spotify == null)
             {
                 Logger.Log("Cannot Play Until Web Device Is Registered");
                 return;
@@ -160,7 +160,7 @@ namespace osu.Game.RemoteAudio
 
         public void Seek(long ms)
         {
-            if (!ready || spotify == null)
+            if (!transferedDevice || spotify == null)
             {
                 Logger.Log("Cannot Play Until Web Device Is Registered");
                 return;
@@ -172,7 +172,7 @@ namespace osu.Game.RemoteAudio
 
         public void Volume(double volume)
         {
-            if (!ready || spotify == null)
+            if (!transferedDevice || spotify == null)
             {
                 Logger.Log("Cannot Play Until Web Device Is Registered");
                 return;

@@ -4,6 +4,7 @@
 #nullable disable
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics;
@@ -27,6 +28,7 @@ namespace osu.Game.Screens.Play.HUD
         public ExpansionMode ExpansionMode = ExpansionMode.ExpandOnHover;
 
         private readonly BindableWithCurrent<IReadOnlyList<Mod>> current = new BindableWithCurrent<IReadOnlyList<Mod>>();
+        private List<Type> incompatible = new List<Type>();
 
         public Bindable<IReadOnlyList<Mod>> Current
         {
@@ -36,6 +38,24 @@ namespace osu.Game.Screens.Play.HUD
                 ArgumentNullException.ThrowIfNull(value);
 
                 current.Current = value;
+            }
+        }
+
+        public List<Type> Incompatible
+        {
+            get => incompatible;
+            set
+            {
+                if (value == null)
+                {
+                    incompatible = new List<Type>();
+                    return;
+                }
+
+                if (value.Any(t => !typeof(Mod).IsAssignableFrom(t))) // Ensure that incompatable mod types are mods
+                    throw new ArgumentException();
+
+                incompatible = value;
             }
         }
 
@@ -68,7 +88,16 @@ namespace osu.Game.Screens.Play.HUD
             if (mods.NewValue == null) return;
 
             foreach (Mod mod in mods.NewValue)
-                iconsContainer.Add(new ModIcon(mod) { Scale = new Vector2(0.6f) });
+            {
+                osu.Framework.Logging.Logger.Log($"{((incompatible != null) ? incompatible.Count : false)} there is somethign ");
+                if (incompatible != null && incompatible.Any(t => t.IsAssignableFrom(mod.GetType())))
+                {
+                    osu.Framework.Logging.Logger.Log($"got it :)");
+                    iconsContainer.Add(new ModIcon(mod) { Scale = new Vector2(0.6f), Disabled = true});
+                }
+                else
+                    iconsContainer.Add(new ModIcon(mod) { Scale = new Vector2(0.6f) });
+            }
 
             appearTransform();
         }

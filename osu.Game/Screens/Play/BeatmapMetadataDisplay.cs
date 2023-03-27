@@ -3,6 +3,7 @@
 
 #nullable disable
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using osu.Framework.Allocation;
@@ -32,6 +33,7 @@ namespace osu.Game.Screens.Play
     {
         private readonly IWorkingBeatmap beatmap;
         private readonly Bindable<IReadOnlyList<Mod>> mods;
+        private readonly List<Type> incompatible;
         private readonly Drawable logoFacade;
         private LoadingSpinner loading;
 
@@ -54,13 +56,11 @@ namespace osu.Game.Screens.Play
             this.logoFacade = logoFacade;
 
             if (beatmap.Track is RemoteTrack)
-            {
-                this.mods = new Bindable<IReadOnlyList<Mod>>(mods.Value.Where(m => m is ModRateAdjust == false).ToList());
-            } else
-            {
-                this.mods = new Bindable<IReadOnlyList<Mod>>();
-                this.mods.BindTo(mods);
-            }
+                this.incompatible = new List<Type>() {typeof(ModRateAdjust)};
+            else
+                this.incompatible = new List<Type>();
+            this.mods = new Bindable<IReadOnlyList<Mod>>();
+            this.mods.BindTo(mods);
         }
 
         private IBindable<StarDifficulty?> starDifficulty;
@@ -184,7 +184,8 @@ namespace osu.Game.Screens.Play
                             Anchor = Anchor.TopCentre,
                             Origin = Anchor.TopCentre,
                             Margin = new MarginPadding { Top = 20 },
-                            Current = mods
+                            Current = mods,
+                            Incompatible = incompatible
                         },
                     },
                 }

@@ -196,6 +196,7 @@ namespace osu.Game.Beatmaps
         public bool AudioEquals(BeatmapInfo? other) => other != null
                                                        && BeatmapSet != null
                                                        && other.BeatmapSet != null
+                                                       && other.BeatmapSet.Metadata.RemoteAudioReference == BeatmapSet.Metadata.RemoteAudioReference
                                                        && compareFiles(this, other, m => m.AudioFile);
 
         public bool BackgroundEquals(BeatmapInfo? other) => other != null

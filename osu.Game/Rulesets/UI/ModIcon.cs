@@ -26,6 +26,7 @@ namespace osu.Game.Rulesets.UI
     public partial class ModIcon : Container, IHasTooltip
     {
         public readonly BindableBool Selected = new BindableBool();
+        public bool Disabled = false;
 
         private readonly SpriteIcon modIcon;
         private readonly SpriteText modAcronym;
@@ -129,7 +130,10 @@ namespace osu.Game.Rulesets.UI
 
         private void updateColour()
         {
-            background.Colour = Selected.Value ? backgroundColour.Lighten(0.2f) : backgroundColour;
+            if (Disabled)
+                background.Colour = Selected.Value ? Color4.Gray.Lighten(0.2f) : Colour4.Gray;
+            else
+                background.Colour = Selected.Value ? backgroundColour.Lighten(0.2f) : backgroundColour;
         }
     }
 }

@@ -56,6 +56,7 @@ namespace osu.Game.Beatmaps
         /// The filename of the audio file consumed by this beatmap.
         /// </summary>
         string AudioFile { get; }
+        string RemoteAudioReference { get; }
 
         /// <summary>
         /// The filename of the background image file consumed by this beatmap.
