@@ -102,12 +102,13 @@ namespace osu.Game.Screens.Play
 
         public List<Type> DisabledMods;
 
-        public HUDOverlay(DrawableRuleset drawableRuleset, IReadOnlyList<Mod> mods, bool alwaysShowLeaderboard = true)
+        public HUDOverlay(DrawableRuleset drawableRuleset, IReadOnlyList<Mod> mods, List<Type> disabledMods, bool alwaysShowLeaderboard = true)
         {
             Drawable rulesetComponents;
 
             this.drawableRuleset = drawableRuleset;
             this.mods = mods;
+            this.DisabledMods = disabledMods;
 
             RelativeSizeAxes = Axes.Both;
 
@@ -354,7 +355,7 @@ namespace osu.Game.Screens.Play
 
         protected ModDisplay CreateModsContainer() {
             osu.Framework.Logging.Logger.Log($"there are {DisabledMods?.Count} disabled mods");
-            return  new ModDisplay
+            return new ModDisplay
             {
                 Anchor = Anchor.TopRight,
                 Origin = Anchor.TopRight,
