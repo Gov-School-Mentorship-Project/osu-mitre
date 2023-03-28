@@ -427,6 +427,7 @@ namespace osu.Game.Screens.Play
 
         private Drawable createOverlayComponents(IWorkingBeatmap working)
         {
+            List<Type> disabledMods = (typeof(RemoteTrack).IsAssignableFrom(Beatmap.Value.Track.GetType())) ? new List<Type>() {typeof(ModRateAdjust)} : new List<Type>();
             var container = new Container
             {
                 RelativeSizeAxes = Axes.Both,
@@ -442,7 +443,7 @@ namespace osu.Game.Screens.Play
                     // display the cursor above some HUD elements.
                     DrawableRuleset.Cursor?.CreateProxy() ?? new Container(),
                     DrawableRuleset.ResumeOverlay?.CreateProxy() ?? new Container(),
-                    HUDOverlay = new HUDOverlay(DrawableRuleset, originalMods, Configuration.AlwaysShowLeaderboard)
+                    HUDOverlay = new HUDOverlay(DrawableRuleset, originalMods, disabledMods, Configuration.AlwaysShowLeaderboard)
                     {
                         HoldToQuit =
                         {
@@ -457,7 +458,6 @@ namespace osu.Game.Screens.Play
                         },
                         Anchor = Anchor.Centre,
                         Origin = Anchor.Centre,
-                        DisabledMods = (Beatmap.Value.Track is RemoteTrack) ? new List<Type>() {typeof(ModRateAdjust)} : new List<Type>()
                     },
                     skipIntroOverlay = new SkipOverlay(DrawableRuleset.GameplayStartTime)
                     {

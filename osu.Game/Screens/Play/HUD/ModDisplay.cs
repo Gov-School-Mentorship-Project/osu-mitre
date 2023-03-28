@@ -89,7 +89,7 @@ namespace osu.Game.Screens.Play.HUD
 
             foreach (Mod mod in mods.NewValue)
             {
-                osu.Framework.Logging.Logger.Log($"{((incompatible != null) ? incompatible.Count : false)} there is somethign ");
+                osu.Framework.Logging.Logger.Log($"{((incompatible != null) ? incompatible.Count : false)} there is something");
                 if (incompatible != null && incompatible.Any(t => t.IsAssignableFrom(mod.GetType())))
                 {
                     osu.Framework.Logging.Logger.Log($"got it :)");
