@@ -277,8 +277,6 @@ namespace osu.Game.Overlays
             {
                 progressBar.EndTime = track.Length;
                 progressBar.CurrentTime = track.CurrentTime;
-
-                osu.Framework.Logging.Logger.Log($"updating the playButton icon based on track.IsRunning = {track.IsRunning}");
                 playButton.Icon = track.IsRunning ? FontAwesome.Regular.PauseCircle : FontAwesome.Regular.PlayCircle;
             }
             else

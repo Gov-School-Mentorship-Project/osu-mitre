@@ -218,14 +218,15 @@ namespace osu.Game.Beatmaps
                 }
             }
 
-            protected override Track GetRemoteTrack()
+            protected override Track GetRemoteTrack(double start)
             {
                 if (string.IsNullOrEmpty(Metadata.RemoteAudioReference))
                 {
                     return null;
                 }
 
-                RemoteTrack t = RemoteBeatmapAudio.TrackFromReference(Metadata.RemoteAudioReference, BeatmapInfo.Length + 1000); // 1 second buffer
+                Logger.Log($"AudioLeadIn {BeatmapInfo.AudioLeadIn}");
+                RemoteTrack t = RemoteBeatmapAudio.TrackFromReference(Metadata.RemoteAudioReference, BeatmapInfo.Length + 1000 + start); // 1 second buffer
                 if (t is SpotifyTrack)
                     SpotifyManager.Instance.currentTrack = t as SpotifyTrack;
                 return t;

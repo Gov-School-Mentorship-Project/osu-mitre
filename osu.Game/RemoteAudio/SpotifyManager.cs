@@ -79,6 +79,7 @@ namespace osu.Game.RemoteAudio
             Instance.authentication = new OAuthSpotify(Instance.clientId, Instance.clientSecret, "https://api.spotify.com/v1");
 
             Instance.authentication.Token.ValueChanged += Instance.OnTokenChanged;
+            Logger.Log($"Spotify Access Token {config.Get<string>(OsuSetting.SpotifyToken)}");
             Instance.authentication.Token.Value = OAuthToken.Parse(config.Get<string>(OsuSetting.SpotifyToken));
         }
 
@@ -123,7 +124,7 @@ namespace osu.Game.RemoteAudio
         {
             if (!transferedDevice || spotify == null)
             {
-                Logger.Log("Cannot Play Until Web Device Is Registered");
+                Logger.Log("Cannot Reset Until Web Device Is Registered");
                 return;
             }
 
@@ -134,7 +135,7 @@ namespace osu.Game.RemoteAudio
         {
             if (!transferedDevice || spotify == null)
             {
-                Logger.Log("Cannot Play Until Web Device Is Registered");
+                Logger.Log("Cannot Resume Until Web Device Is Registered");
                 return;
             }
 
@@ -145,7 +146,7 @@ namespace osu.Game.RemoteAudio
         {
             if (!transferedDevice || spotify == null)
             {
-                Logger.Log("Cannot Play Until Web Device Is Registered");
+                Logger.Log("Cannot Stop Until Web Device Is Registered");
                 return;
             }
 
@@ -162,7 +163,7 @@ namespace osu.Game.RemoteAudio
         {
             if (!transferedDevice || spotify == null)
             {
-                Logger.Log("Cannot Play Until Web Device Is Registered");
+                Logger.Log("Cannot Seek Until Web Device Is Registered");
                 return;
             }
 
@@ -174,7 +175,6 @@ namespace osu.Game.RemoteAudio
         {
             if (!transferedDevice || spotify == null)
             {
-                Logger.Log("Cannot Play Until Web Device Is Registered");
                 return;
             }
 
@@ -267,10 +267,13 @@ namespace osu.Game.RemoteAudio
         private async void OnTokenChanged(ValueChangedEvent<OAuthToken> e)
         {
             Logger.Log("OnTokenChanged() in SpotifyManager!");
+
             if (e.NewValue == null || e.NewValue.AccessToken == null)
             {
+                Logger.Log("trying to set new value to null");
                 spotify = null;
                 spotifyUsername = null;
+                config?.SetValue<string?>(OsuSetting.SpotifyToken, null);
                 //LoginStateUpdated?.Invoke(LoginState.LoggedOut, String.Empty);
                 Logout();
                 return;
@@ -359,10 +362,11 @@ namespace osu.Game.RemoteAudio
                 TrackAudioFeatures features = await spotify.Tracks.GetAudioFeatures(id).ConfigureAwait(false);
                 TrackAudioAnalysis analysis = await spotify.Tracks.GetAudioAnalysis(id).ConfigureAwait(false);
 
-                List<Section> sections = analysis.Sections.Where(s => s.Tempo > 0 && s.TimeSignature > 0).Select(s => new Section(60000.0 / (double)s.Tempo, (double)s.Start, s.TimeSignature, 4)).ToList();
+                List<Section> sections = analysis.Sections.Where(s => s.Tempo > 0 && s.TimeSignature > 0).Select(s => new Section(60000.0 / (double)s.Tempo, (double)s.Start * 1000.0, s.TimeSignature, 4)).ToList();
                 if (sections.Count == 0)
                 {
                     sections.Add(new Section(1000.0, 0.0, 4, 4));
+                    sections.Add(new Section(1000, features.DurationMs - 1000, 4, 4));
                 }
 
                 IEnumerable<string> artistNames = from artist in track.Artists select artist.Name;

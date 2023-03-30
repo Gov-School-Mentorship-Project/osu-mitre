@@ -72,13 +72,14 @@ namespace osu.Game.Online.API.OAuthMethods
                 return;
             }
 
+            Logger.Log($"got access token: {initialResponse.AccessToken}");
+
             Token.Value = new OAuthToken() {
                 AccessToken = initialResponse.AccessToken,
                 ExpiresIn = initialResponse.ExpiresIn,
                 RefreshToken = initialResponse.RefreshToken
             };
 
-            Logger.Log($"got access token: {initialResponse.AccessToken}");
             //var authenticator = new PKCEAuthenticator(clientId, initialResponse);
 
             await server.Stop().ConfigureAwait(false);

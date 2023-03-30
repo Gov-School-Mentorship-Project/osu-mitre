@@ -38,7 +38,7 @@ namespace osu.Game.RemoteAudio
             switch (data[0])
             {
                 case "token":
-                    return SendAll("token", SpotifyManager.Instance.authentication?.Token.Value.AccessToken);
+                    return SendAll("token", SpotifyManager.Instance.authentication?.Token?.Value?.AccessToken ?? String.Empty);
                 case "device":
                     SpotifyManager.Instance.TransferDevice(data[1]);
                     return SendAll("device");

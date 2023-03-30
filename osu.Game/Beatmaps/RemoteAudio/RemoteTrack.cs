@@ -106,10 +106,12 @@ namespace osu.Game.Beatmaps.RemoteAudio
 
             lock (clock)
             {
-                if (clock.IsRunning && CurrentTime >= Length)
+                if (clock.IsRunning && clock.CurrentTime + seekOffset >= Length)
                 {
                     if (Looping)
+                    {
                         Restart();
+                    }
                     else
                     {
                         Logger.Log("completed track, should stop now :)");

@@ -147,14 +147,20 @@ namespace osu.Game.Overlays.Music
         {
             beatmapSet.PerformRead(set =>
             {
+                osu.Framework.Logging.Logger.Log("Chose Track!");
                 if (set.Equals((beatmap.Value?.BeatmapSetInfo)))
                 {
                     beatmap.Value?.Track.Seek(0);
                     return;
                 }
 
+
+                osu.Framework.Logging.Logger.Log("Seting it to the actual beatmap");
                 beatmap.Value = beatmaps.GetWorkingBeatmap(set.Beatmaps.First());
+                osu.Framework.Logging.Logger.Log($"Restarting the track {beatmap.Value.Track?.Name ?? "there is none :)"}");
+                osu.Framework.Logging.Logger.Log($"{beatmap.Value.Track.IsLoaded} {beatmap.Value.Track.IsRunning} {beatmap.Value.Track.IsAlive}");
                 beatmap.Value.Track.Restart();
+                osu.Framework.Logging.Logger.Log("It worked?");
             });
         }
 

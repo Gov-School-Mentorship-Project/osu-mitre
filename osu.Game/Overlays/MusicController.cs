@@ -229,6 +229,7 @@ namespace osu.Game.Overlays
 
         private bool next()
         {
+            Logger.Log($"Actually going to the next track {beatmap.Disabled}");
             if (beatmap.Disabled)
                 return false;
 
@@ -351,11 +352,15 @@ namespace osu.Game.Overlays
         private void onTrackCompleted(WorkingBeatmap workingBeatmap)
         {
             // the source of track completion is the audio thread, so the beatmap may have changed before firing.
+            Logger.Log($"Track {workingBeatmap.Track.Name} has completed! {beatmap.Disabled}");
             if (current != workingBeatmap)
                 return;
 
             if (!CurrentTrack.Looping && !beatmap.Disabled)
+            {
+                Logger.Log("WE SHOULD BE GOING TO THE NEXT TRACK");
                 NextTrack();
+            }
         }
 
         private bool allowTrackAdjustments;

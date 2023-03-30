@@ -71,7 +71,7 @@ namespace osu.Game.Beatmaps
         protected abstract IBeatmap GetBeatmap();
         protected abstract Texture GetBackground();
         protected abstract Track GetBeatmapTrack();
-        protected virtual Track GetRemoteTrack() => null; // TODO: Make this an abstract member
+        protected virtual Track GetRemoteTrack(double start) => null; // TODO: Make this an abstract member
 
         /// <summary>
         /// Creates a new skin instance for this beatmap.
@@ -109,7 +109,8 @@ namespace osu.Game.Beatmaps
 
         public Track LoadTrack()
         {
-            track = GetRemoteTrack() ?? GetBeatmapTrack() ?? GetVirtualTrack(1000);
+            double start = Beatmap.HitObjects.FirstOrDefault()?.StartTime - 2000 ?? 0;
+            track = GetRemoteTrack(start) ?? GetBeatmapTrack() ?? GetVirtualTrack(1000);
             // the track may have changed, recycle the current waveform.
             waveform?.Dispose();
             waveform = null;

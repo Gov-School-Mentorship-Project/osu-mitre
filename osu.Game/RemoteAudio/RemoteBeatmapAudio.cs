@@ -52,7 +52,11 @@ namespace osu.Game.RemoteAudio
 
         public string Artist { get; }
         public string Title { get; }
+
+        // Length of the track in miliseconds
         public double Length { get; }
+
+        // sections of the track with their own tempo (as determined by the Spotify API)
         public List<Section> Sections { get; }
     }
 
@@ -66,7 +70,9 @@ namespace osu.Game.RemoteAudio
             TimeSignatureDenominator = timeDenominator;
         }
 
+        // the start time for the section in milliseconds
         public double Start;
+        // duration of each beat in the section in milliseconds
         public double BeatDuration;
         public int TimeSignatureNumerator { get; }
         public int TimeSignatureDenominator { get; }
