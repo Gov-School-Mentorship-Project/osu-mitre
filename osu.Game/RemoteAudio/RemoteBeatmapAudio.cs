@@ -40,7 +40,7 @@ namespace osu.Game.RemoteAudio
 
     public struct RemoteAudioInfo
     {
-        public static RemoteAudioInfo DefaultError => new RemoteAudioInfo("Invalid reference", "Invalid Reference", 1000, new List<Section>());
+        public static RemoteAudioInfo DefaultError => new RemoteAudioInfo("Ensure you are logged in and the URI/URL is valid", "Ensure you are logged in and the URI/URL is valid", 1000, new List<Section>());
 
         public RemoteAudioInfo(string artist, string title, double length, List<Section> sections)
         {
