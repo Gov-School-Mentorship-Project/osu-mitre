@@ -33,9 +33,21 @@ namespace osu.Game.RemoteAudio
             {
                 return await SpotifyManager.Instance.GetRemoteBeatmapInfo(newRef).ConfigureAwait(false);
             }
-            return RemoteAudioInfo.DefaultError;
+
+            throw new InvalidReferenceException();
+        }
+    }
+
+    public class InvalidReferenceException : Exception
+    {
+        public InvalidReferenceException()
+        {
         }
 
+        public InvalidReferenceException(string message)
+            : base(message)
+        {
+        }
     }
 
     public struct RemoteAudioInfo

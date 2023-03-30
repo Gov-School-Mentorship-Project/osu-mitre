@@ -352,7 +352,7 @@ namespace osu.Game.RemoteAudio
         public async Task<RemoteAudioInfo> GetRemoteBeatmapInfo(string reference)
         {
             if (spotify == null)
-                return RemoteAudioInfo.DefaultError;
+                throw new NotLoggedInException();
 
             string[] parts = reference.Split(":");
             string id = parts[parts.Length - 1];
@@ -380,8 +380,42 @@ namespace osu.Game.RemoteAudio
             } catch (Exception e)
             {
                 Logger.Log($"Error loading track info: {e}");
-                return RemoteAudioInfo.DefaultError;
+                throw new TrackInfoException();
             }
+        }
+    }
+
+    public class NotLoggedInException : Exception
+    {
+        public NotLoggedInException()
+        {
+        }
+
+        public NotLoggedInException(string message)
+            : base(message)
+        {
+        }
+
+        public NotLoggedInException(string message, Exception inner)
+            : base(message, inner)
+        {
+        }
+    }
+
+    public class TrackInfoException : Exception
+    {
+        public TrackInfoException()
+        {
+        }
+
+        public TrackInfoException(string message)
+            : base(message)
+        {
+        }
+
+        public TrackInfoException(string message, Exception inner)
+            : base(message, inner)
+        {
         }
     }
 

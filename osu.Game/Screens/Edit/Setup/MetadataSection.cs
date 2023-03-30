@@ -14,6 +14,7 @@ using osu.Game.RemoteAudio;
 using osu.Game.Overlays;
 using osu.Game.Beatmaps.ControlPoints;
 using osu.Game.Beatmaps.Timing;
+using osu.Framework.Logging;
 
 namespace osu.Game.Screens.Edit.Setup
 {
@@ -160,27 +161,39 @@ namespace osu.Game.Screens.Edit.Setup
 
         private async void LoadRemoteAudioInfo()
         {
-            RemoteAudioInfo info = await RemoteBeatmapAudio.GetRemoteBeatmapInfo(remoteAudioTextBox.Current.Value).ConfigureAwait(false);
-            Schedule(() => {
-                ArtistTextBox.Current.Value = info.Artist;
-                TitleTextBox.Current.Value = info.Title;
+            try
+            {
+                RemoteAudioInfo info = await RemoteBeatmapAudio.GetRemoteBeatmapInfo(remoteAudioTextBox.Current.Value).ConfigureAwait(false);
+                Schedule(() => {
+                    ArtistTextBox.Current.Value = info.Artist;
+                    TitleTextBox.Current.Value = info.Title;
 
-                Beatmap.BeatmapInfo.Length = info.Length;
-                Beatmap.ControlPointInfo.Clear();
+                    Beatmap.BeatmapInfo.Length = info.Length;
+                    Beatmap.ControlPointInfo.Clear();
 
-                osu.Framework.Logging.Logger.Log($"Loading {info.Title} which is {info.Length} long");
-                foreach (Section s in info.Sections)
-                {
-                    osu.Framework.Logging.Logger.Log($"New Section at {s.Start}ms and {s.BeatDuration}ms per beat");
-                    var group = Beatmap.ControlPointInfo.GroupAt(s.Start, true);
-                    group.Add(new TimingControlPoint() {BeatLength = s.BeatDuration, TimeSignature = new TimeSignature(s.TimeSignatureNumerator)});
-                }
+                    Logger.Log($"Loading {info.Title} which is {info.Length} long");
+                    foreach (Section s in info.Sections)
+                    {
+                        osu.Framework.Logging.Logger.Log($"New Section at {s.Start}ms and {s.BeatDuration}ms per beat");
+                        var group = Beatmap.ControlPointInfo.GroupAt(s.Start, true);
+                        group.Add(new TimingControlPoint() {BeatLength = s.BeatDuration, TimeSignature = new TimeSignature(s.TimeSignatureNumerator)});
+                    }
 
-                editorBeatmap.SaveState();
+                    editorBeatmap.SaveState();
 
-                music.ReloadCurrentTrack();
-                updateMetadata();
-            });
+                    music.ReloadCurrentTrack();
+                    updateMetadata();
+                });
+            } catch (InvalidReferenceException)
+            {
+                Logger.Log($"Invalid Spotify track reference.", level: LogLevel.Error);
+            } catch (NotLoggedInException)
+            {
+                Logger.Log($"Unable to connect to Spotify. Please log in.", level: LogLevel.Error);
+            } catch (TrackInfoException)
+            {
+                Logger.Log($"API returned an invalid value.", level: LogLevel.Error);
+            }
         }
     }
 }
