@@ -89,23 +89,33 @@ namespace osu.Game.RemoteAudio
             if (spotify == null)
                 return;
 
-            spotify.Player.TransferPlayback(new PlayerTransferPlaybackRequest(new List<string> { deviceId }));
-            transferedDevice = true;
+            CancellationTokenSource cts = new CancellationTokenSource();
+            CancellationToken token = cts.Token;
+            token.Register(() =>
+            {
+                transferedDevice = false;
+                Logger.Log("Error Transfering Spotify Playback to Webpage", level: LogLevel.Error);
+            });
+            var request = new PlayerTransferPlaybackRequest(new List<string> { deviceId });
+            spotify.Player.TransferPlayback(request, token).ContinueWith(result => {
+                transferedDevice = true;
+                Logger.Log("Dne transfereing device");
+            });
         }
 
-        public void Play(string reference, int positionMs)
+        public bool Play(string reference, int positionMs)
         {
             if (!transferedDevice || spotify == null)
             {
                 Logger.Log("Cannot Play Until Web device Is Registered");
-                return;
+                return false;
             }
 
             if (currentReference == reference)
             {
                 Logger.Log("not playing becasue it is already playing ");
                 Reset();
-                return;
+                return true;
             } else
             {
                 Logger.Log($"Changing from {currentReference} to {reference} at {positionMs}");
@@ -118,6 +128,7 @@ namespace osu.Game.RemoteAudio
             };
             currentReference = reference;
             spotify.Player.ResumePlayback(resume);
+            return true;
         }
 
         public void Reset()
@@ -366,7 +377,7 @@ namespace osu.Game.RemoteAudio
                 if (sections.Count == 0)
                 {
                     sections.Add(new Section(1000.0, 0.0, 4, 4));
-                    sections.Add(new Section(1000, features.DurationMs - 1000, 4, 4));
+                    sections.Add(new Section(1000, features.DurationMs, 4, 4));
                 }
 
                 IEnumerable<string> artistNames = from artist in track.Artists select artist.Name;

@@ -22,6 +22,8 @@ using osu.Game.Screens.Ranking;
 using osu.Game.Users;
 using osu.Game.Utils;
 using osuTK.Input;
+using osu.Framework.Logging;
+using osu.Game.RemoteAudio;
 
 namespace osu.Game.Screens.Select
 {
@@ -34,11 +36,31 @@ namespace osu.Game.Screens.Select
 
         public override bool AllowExternalScreenChange => true;
 
-        public override MenuItem[] CreateForwardNavigationMenuItemsForBeatmap(BeatmapInfo beatmap) => new MenuItem[]
+        public override MenuItem[] CreateForwardNavigationMenuItemsForBeatmap(BeatmapInfo beatmap)
         {
-            new OsuMenuItem(ButtonSystemStrings.Play.ToSentence(), MenuItemType.Highlighted, () => FinaliseSelection(beatmap)),
-            new OsuMenuItem(ButtonSystemStrings.Edit.ToSentence(), MenuItemType.Standard, () => Edit(beatmap))
-        };
+            List<MenuItem> items = new List<MenuItem>()
+            {
+                new OsuMenuItem(ButtonSystemStrings.Edit.ToSentence(), MenuItemType.Standard, () => Edit(beatmap)),
+            };
+
+            if (RemoteBeatmapAudio.validateRemoteAudio(beatmap.Metadata.RemoteAudioReference))
+            {
+                items.Insert(0, new OsuMenuItem("Play with Remote Audio", MenuItemType.Highlighted, () => FinaliseSelection(beatmap)));
+            }
+
+            if (beatmap.Metadata.AudioFile != string.Empty)
+            {
+                items.Insert(0, new OsuMenuItem("Play with Local Audio", MenuItemType.Highlighted, () =>
+                {
+                    Logger.Log("Playing with local audio and beatmap.UseRemoteIfAvailable = false");
+                    beatmap.UseRemoteIfAvailable = false;
+                    FinaliseSelection(beatmap);
+                }));
+            }
+
+            return items.ToArray();
+        }
+
 
         protected override UserActivity InitialActivity => new UserActivity.ChoosingBeatmap();
 
@@ -91,6 +113,10 @@ namespace osu.Game.Screens.Select
 
             modsAtGameplayStart = Mods.Value;
 
+            /*if (Beatmap.Value.Track is osu.Game.Beatmaps.RemoteAudio.RemoteTrack)
+                Logger.Log("This is a remote track you're dealing with", level: LogLevel.Important);
+            else
+                osu.Framework.Logging.Logger.Log("THis is normal stuff here", level: LogLevel.Important);*/
             // Ctrl+Enter should start map with autoplay enabled.
             if (GetContainingInputManager().CurrentState?.Keyboard.ControlPressed == true)
             {

@@ -41,6 +41,9 @@ namespace osu.Game.Beatmaps
 
         public BeatmapDifficulty Difficulty { get; set; } = null!;
 
+        [NonSerialized]
+        public bool UseRemoteIfAvailable = true;
+
         public BeatmapMetadata Metadata { get; set; } = null!;
 
         [JsonIgnore]
@@ -51,6 +54,7 @@ namespace osu.Game.Beatmaps
 
         public BeatmapInfo(RulesetInfo? ruleset = null, BeatmapDifficulty? difficulty = null, BeatmapMetadata? metadata = null)
         {
+            osu.Framework.Logging.Logger.Log($"CREATING A NEW BEATMAPINFO!!! {metadata?.Title}");
             ID = Guid.NewGuid();
             Ruleset = ruleset ?? new RulesetInfo
             {

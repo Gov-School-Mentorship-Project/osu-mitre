@@ -220,15 +220,18 @@ namespace osu.Game.Beatmaps
 
             protected override Track GetRemoteTrack(double start)
             {
+                Logger.Log($"Getting Remote Track: {Metadata.RemoteAudioReference}");
                 if (string.IsNullOrEmpty(Metadata.RemoteAudioReference))
                 {
+                    Logger.Log("It was null");
                     return null;
                 }
 
-                Logger.Log($"AudioLeadIn {BeatmapInfo.AudioLeadIn}");
+                Logger.Log($"Loading {Metadata.RemoteAudioReference} which is {BeatmapInfo.Length} long. It also starts at {start}");
                 RemoteTrack t = RemoteBeatmapAudio.TrackFromReference(Metadata.RemoteAudioReference, BeatmapInfo.Length + 1000 + start); // 1 second buffer
                 if (t is SpotifyTrack)
                     SpotifyManager.Instance.currentTrack = t as SpotifyTrack;
+                Logger.Log($"Returning the RemoteTrack {t}");
                 return t;
             }
 

@@ -38,8 +38,7 @@ namespace osu.Game.Beatmaps.RemoteAudio
 
             if (!startedOnRemote)
             {
-                SpotifyManager.Instance.Play(reference, (int)(CurrentTime));
-                startedOnRemote = true;
+                startedOnRemote = SpotifyManager.Instance.Play(reference, (int)(CurrentTime));
             }
             else
             {

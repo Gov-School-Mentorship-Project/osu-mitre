@@ -110,7 +110,20 @@ namespace osu.Game.Beatmaps
         public Track LoadTrack()
         {
             double start = Beatmap.HitObjects.FirstOrDefault()?.StartTime - 2000 ?? 0;
-            track = GetRemoteTrack(start) ?? GetBeatmapTrack() ?? GetVirtualTrack(1000);
+            if (start < 0)
+                start = 0;
+            Logger.Log($"The UseRemoteIfAvailable is {Beatmap.BeatmapInfo.UseRemoteIfAvailable}");
+            if (Beatmap.BeatmapInfo.UseRemoteIfAvailable)
+            {
+                Logger.Log("Getting Remote");
+                track = GetRemoteTrack(start);
+            }
+            if (track == null)
+            {
+                Logger.Log("Getting Local");
+                track = GetBeatmapTrack() ?? GetVirtualTrack(1000);
+            }
+            Logger.Log("Done?");
             // the track may have changed, recycle the current waveform.
             waveform?.Dispose();
             waveform = null;

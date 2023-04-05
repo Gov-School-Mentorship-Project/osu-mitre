@@ -23,6 +23,10 @@ namespace osu.Game.Online.API.OAuthMethods
             Logger.Log("Generating Codes");
             (string verifier, string challenge) = PKCEUtil.GenerateCodes();
             Uri baseUri = new Uri("http://localhost:3000/callback");
+            if (String.IsNullOrEmpty(clientId))
+            {
+                Logger.Log("Missing ClientId", level: LogLevel.Error);
+            }
             LoginRequest request = new LoginRequest(baseUri, clientId, LoginRequest.ResponseType.Code)
             {
                 CodeChallengeMethod = "S256",

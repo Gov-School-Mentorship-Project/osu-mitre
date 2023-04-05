@@ -49,11 +49,14 @@ namespace osu.Game.RemoteAudio
         protected override Task OnClientConnectedAsync(IWebSocketContext context)
         {
             Logger.Log("client connected???");
-            notifications?.Post(new SimpleNotification
+            if (SpotifyManager.Instance.LoggedIn)
             {
-                Text = "Webpage has successfully connected",
-                Icon = FontAwesome.Solid.Music,
-            });
+                notifications?.Post(new SimpleNotification
+                {
+                    Text = "Webpage has successfully connected",
+                    Icon = FontAwesome.Solid.Music,
+                });
+            }
             SpotifyManager.Instance.Volume();
             return base.OnClientConnectedAsync(context);
         }
