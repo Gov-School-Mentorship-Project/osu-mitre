@@ -386,6 +386,8 @@ namespace osu.Game.Screens.Select
             if (!AllowEditing)
                 throw new InvalidOperationException($"Attempted to edit when {nameof(AllowEditing)} is disabled");
 
+            Logger.Log($"Trying to edit beatmap: {beatmapInfo?.Metadata.Title} or this one {beatmapInfoNoDebounce?.Metadata.Title}");
+            Logger.Log($"The length of the track is {beatmapInfo?.Length}.");
             Beatmap.Value = beatmaps.GetWorkingBeatmap(beatmapInfo ?? beatmapInfoNoDebounce);
             this.Push(new EditorLoader());
         }

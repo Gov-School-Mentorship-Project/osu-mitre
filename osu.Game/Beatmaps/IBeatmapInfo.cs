@@ -38,6 +38,11 @@ namespace osu.Game.Beatmaps
         double Length { get; }
 
         /// <summary>
+        /// The playable length in milliseconds of the remote track for this beatmap.
+        /// </summary>
+        double RemoteLength { get; }
+
+        /// <summary>
         /// The most common BPM of this beatmap.
         /// </summary>
         double BPM { get; }

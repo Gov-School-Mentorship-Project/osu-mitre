@@ -92,6 +92,8 @@ namespace osu.Game.Beatmaps
 
         public double Length { get; set; }
 
+        public double RemoteLength { get; set; }
+
         public double BPM { get; set; }
 
         public string Hash { get; set; } = string.Empty;

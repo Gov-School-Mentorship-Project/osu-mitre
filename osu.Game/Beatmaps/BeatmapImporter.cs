@@ -393,6 +393,7 @@ namespace osu.Game.Beatmaps
                         GridSize = decodedInfo.GridSize,
                         TimelineZoom = decodedInfo.TimelineZoom,
                         MD5Hash = memoryStream.ComputeMD5Hash(),
+                        RemoteLength = decodedInfo.RemoteLength,
                     };
 
                     beatmaps.Add(beatmap);

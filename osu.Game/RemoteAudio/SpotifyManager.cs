@@ -122,12 +122,19 @@ namespace osu.Game.RemoteAudio
             }
 
             Logger.Log($"Playing {reference} from SpotifyManager");
+            CancellationTokenSource cts = new CancellationTokenSource();
+            CancellationToken token = cts.Token;
+            token.Register(() =>
+            {
+                transferedDevice = false;
+                Logger.Log($"Error resuming Spotify track: {reference}", level: LogLevel.Error);
+            });
             PlayerResumePlaybackRequest resume = new PlayerResumePlaybackRequest() {
                 Uris = new List<string> { reference },
                 PositionMs = positionMs,
             };
-            currentReference = reference;
-            spotify.Player.ResumePlayback(resume);
+            //currentReference = reference;
+            spotify.Player.ResumePlayback(resume, token).ContinueWith(s => {currentReference = reference;});
             return true;
         }
 

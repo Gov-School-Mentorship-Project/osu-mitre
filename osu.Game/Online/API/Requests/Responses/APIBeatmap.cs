@@ -56,6 +56,9 @@ namespace osu.Game.Online.API.Requests.Responses
         [JsonIgnore]
         public double Length { get; set; }
 
+        [JsonIgnore]
+        public double RemoteLength { get; set; }
+
         [JsonProperty(@"total_length")]
         private double lengthInSeconds
         {

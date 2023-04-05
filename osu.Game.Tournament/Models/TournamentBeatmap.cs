@@ -19,6 +19,8 @@ namespace osu.Game.Tournament.Models
 
         public double Length { get; set; }
 
+        public double RemoteLength { get; set; }
+
         public double StarRating { get; set; }
 
         public IBeatmapMetadataInfo Metadata { get; set; } = new BeatmapMetadata();

@@ -40,6 +40,9 @@ namespace osu.Game.Screens.Edit.Setup
         [Resolved]
         private EditorBeatmap editorBeatmap { get; set; } = null!;
 
+        [Resolved]
+        private IEditorChangeHandler? changeHandler { get; set; }
+
         public override LocalisableString Title => EditorSetupStrings.MetadataHeader;
 
         [BackgroundDependencyLoader]
@@ -168,18 +171,26 @@ namespace osu.Game.Screens.Edit.Setup
                     ArtistTextBox.Current.Value = info.Artist;
                     TitleTextBox.Current.Value = info.Title;
 
-                    Beatmap.BeatmapInfo.Length = info.Length;
+                    if (!string.IsNullOrEmpty(Beatmap.Metadata.AudioFile))
+                    {
+                        Logger.Log("Timing already loaded from audio file", level: LogLevel.Important);
+                        return;
+                    }
+
+                    //Beatmap.BeatmapInfo.Length = info.Length;
+                    Beatmap.BeatmapInfo.RemoteLength = info.Length;
                     Beatmap.ControlPointInfo.Clear();
 
                     Logger.Log($"Loading {info.Title} which is {info.Length} long");
                     foreach (Section s in info.Sections)
                     {
-                        osu.Framework.Logging.Logger.Log($"New Section at {s.Start}ms and {s.BeatDuration}ms per beat");
+                        Logger.Log($"New Section at {s.Start}ms and {s.BeatDuration}ms per beat");
                         var group = Beatmap.ControlPointInfo.GroupAt(s.Start, true);
                         group.Add(new TimingControlPoint() {BeatLength = s.BeatDuration, TimeSignature = new TimeSignature(s.TimeSignatureNumerator)});
                     }
 
-                    editorBeatmap.SaveState();
+                    //editorBeatmap.SaveState();
+                    changeHandler?.SaveState();
 
                     music.ReloadCurrentTrack();
                     updateMetadata();
