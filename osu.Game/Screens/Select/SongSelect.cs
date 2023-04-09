@@ -133,7 +133,7 @@ namespace osu.Game.Screens.Select
         private IDisposable? modSelectOverlayRegistration;
 
         [Resolved]
-        private MusicController music { get; set; } = null!;
+        protected MusicController music { get; set; } = null!;
 
         [Resolved]
         internal IOverlayManager? OverlayManager { get; private set; }

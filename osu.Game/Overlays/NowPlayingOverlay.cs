@@ -278,6 +278,10 @@ namespace osu.Game.Overlays
                 progressBar.EndTime = track.Length;
                 progressBar.CurrentTime = track.CurrentTime;
                 playButton.Icon = track.IsRunning ? FontAwesome.Regular.PauseCircle : FontAwesome.Regular.PlayCircle;
+                if (track.Length <= track.CurrentTime)
+                {
+                    musicController.NextTrack();
+                }
             }
             else
             {

@@ -55,6 +55,7 @@ namespace osu.Game.Screens.Select
                     Logger.Log("Playing with local audio and beatmap.UseRemoteIfAvailable = false");
                     beatmap.UseRemoteIfAvailable = false;
                     FinaliseSelection(beatmap);
+                    music.ReloadCurrentTrack(); // TODO: Check if it works
                 }));
             }
 

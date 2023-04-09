@@ -109,9 +109,11 @@ namespace osu.Game.Beatmaps
 
         public Track LoadTrack()
         {
+            Logger.Log("LOAD TRACK!");
             double start = Beatmap.HitObjects.FirstOrDefault()?.StartTime - 2000 ?? 0;
             if (start < 0)
                 start = 0;
+
             Logger.Log($"The UseRemoteIfAvailable is {Beatmap.BeatmapInfo.UseRemoteIfAvailable}");
             if (Beatmap.BeatmapInfo.UseRemoteIfAvailable)
             {

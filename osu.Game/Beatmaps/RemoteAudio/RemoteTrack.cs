@@ -103,6 +103,7 @@ namespace osu.Game.Beatmaps.RemoteAudio
         protected override void UpdateState()
         {
             base.UpdateState();
+            Logger.Log($"Updating State! {clock.CurrentTime} {Length} {HasCompleted} {Looping}");
 
             lock (clock)
             {

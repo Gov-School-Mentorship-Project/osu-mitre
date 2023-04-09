@@ -123,7 +123,7 @@ namespace osu.Game.Beatmaps
         /// Whether this beatmap matches the online version, based on fetched online metadata.
         /// Will return <c>true</c> if no online metadata is available.
         /// </summary>
-        public bool MatchesOnlineVersion => LastOnlineUpdate == null || MD5Hash == OnlineMD5Hash;
+        public bool MatchesOnlineVersion => LastOnlineUpdate == null || MD5Hash == OnlineMD5Hash || !String.IsNullOrEmpty(BeatmapSet?.Metadata.RemoteAudioReference);
 
         [JsonIgnore]
         public bool Hidden { get; set; }
@@ -193,6 +193,7 @@ namespace osu.Game.Beatmaps
         {
             if (ReferenceEquals(this, other)) return true;
             if (other == null) return false;
+            if (!this.AudioEquals(other)) return false;
 
             return ID == other.ID;
         }
@@ -203,6 +204,7 @@ namespace osu.Game.Beatmaps
                                                        && BeatmapSet != null
                                                        && other.BeatmapSet != null
                                                        && other.BeatmapSet.Metadata.RemoteAudioReference == BeatmapSet.Metadata.RemoteAudioReference
+                                                       && other.UseRemoteIfAvailable == UseRemoteIfAvailable
                                                        && compareFiles(this, other, m => m.AudioFile);
 
         public bool BackgroundEquals(BeatmapInfo? other) => other != null

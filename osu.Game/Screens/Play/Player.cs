@@ -372,7 +372,9 @@ namespace osu.Game.Screens.Play
             DimmableStoryboard.HasStoryboardEnded.ValueChanged += storyboardEnded =>
             {
                 if (storyboardEnded.NewValue)
+                {
                     progressToResults(true);
+                }
             };
 
             // Bind the judgement processors to ourselves
@@ -783,6 +785,8 @@ namespace osu.Game.Screens.Play
         /// <param name="withDelay">Whether a minimum delay (<see cref="RESULTS_DISPLAY_DELAY"/>) should be added before the screen is displayed.</param>
         private void progressToResults(bool withDelay)
         {
+            Logger.Log("Stopping beatmap?");
+            musicController.Stop();
             resultsDisplayDelegate?.Cancel();
 
             double delay = withDelay ? RESULTS_DISPLAY_DELAY : 0;

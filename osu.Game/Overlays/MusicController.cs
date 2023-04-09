@@ -19,6 +19,7 @@ using osu.Framework.Threading;
 using osu.Game.Beatmaps;
 using osu.Game.Database;
 using osu.Game.Rulesets.Mods;
+using osu.Game.RemoteAudio;
 
 namespace osu.Game.Overlays
 {
@@ -71,7 +72,7 @@ namespace osu.Game.Overlays
         /// </summary>
         public void ReloadCurrentTrack()
         {
-            changeTrack();
+            changeTrack(true);
             TrackChanged?.Invoke(current, TrackChangeDirection.None);
         }
 
@@ -202,8 +203,13 @@ namespace osu.Game.Overlays
 
             queuedDirection = TrackChangeDirection.Prev;
 
+            foreach(var set in getBeatmapSets())
+            {
+                Logger.Log($"Prev Track Options: {set.Beatmaps.FirstOrDefault().Metadata.Title}");
+            }
             var playableSet = getBeatmapSets().AsEnumerable().TakeWhile(i => !i.Equals(current.BeatmapSetInfo)).LastOrDefault()
                               ?? getBeatmapSets().LastOrDefault();
+            Logger.Log($"Sleected... {playableSet.Beatmaps.First().Metadata.Title}");
 
             if (playableSet != null)
             {
@@ -235,10 +241,15 @@ namespace osu.Game.Overlays
 
             queuedDirection = TrackChangeDirection.Next;
 
+            foreach(var set in getBeatmapSets())
+            {
+                Logger.Log($"Next Track Options: {set.Beatmaps.FirstOrDefault().Metadata.Title}");
+            }
             var playableSet = getBeatmapSets().AsEnumerable().SkipWhile(i => !i.Equals(current.BeatmapSetInfo)).ElementAtOrDefault(1)
                               ?? getBeatmapSets().FirstOrDefault();
 
             var playableBeatmap = playableSet?.Beatmaps.FirstOrDefault();
+            Logger.Log($"Sleected... {playableBeatmap.Metadata.Title}");
 
             if (playableBeatmap != null)
             {
@@ -265,6 +276,7 @@ namespace osu.Game.Overlays
 
         private void changeBeatmap(WorkingBeatmap newWorking)
         {
+            Logger.Log("CHANGE BEATMAP!!!!");
             // This method can potentially be triggered multiple times as it is eagerly fired in next() / prev() to ensure correct execution order
             // (changeBeatmap must be called before consumers receive the bindable changed event, which is not the case when the local beatmap bindable is updated directly).
             if (newWorking == current)
@@ -298,7 +310,7 @@ namespace osu.Game.Overlays
             current = newWorking;
 
             if (lastWorking == null || !lastWorking.TryTransferTrack(current))
-                changeTrack();
+                changeTrack(lastWorking?.BeatmapInfo.UseRemoteIfAvailable != newWorking?.BeatmapInfo.UseRemoteIfAvailable);
 
             TrackChanged?.Invoke(current, direction);
 
@@ -312,8 +324,9 @@ namespace osu.Game.Overlays
                 working.Value = current;
         }
 
-        private void changeTrack()
+        private void changeTrack(bool forceReload)
         {
+            Logger.Log("CHANGE TRACK!!!!");
             var queuedTrack = getQueuedTrack();
 
             var lastTrack = CurrentTrack;
@@ -326,7 +339,7 @@ namespace osu.Game.Overlays
             {
                 lastTrack.VolumeTo(0, 500, Easing.Out).Expire();
 
-                if (queuedTrack == CurrentTrack)
+                if (queuedTrack == CurrentTrack || forceReload)
                 {
                     AddInternal(queuedTrack);
                     queuedTrack.VolumeTo(0).Then().VolumeTo(1, 300, Easing.Out);
