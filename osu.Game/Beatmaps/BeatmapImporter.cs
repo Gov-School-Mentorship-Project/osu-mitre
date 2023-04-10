@@ -154,9 +154,11 @@ namespace osu.Game.Beatmaps
             if (archive != null)
                 beatmapSet.Beatmaps.AddRange(createBeatmapDifficulties(beatmapSet, realm));
 
+            String reference = beatmapSet.Beatmaps.ToList().Find(b => !String.IsNullOrEmpty(b.Metadata.RemoteAudioReference))?.Metadata.RemoteAudioReference ?? String.Empty;
             foreach (BeatmapInfo b in beatmapSet.Beatmaps)
             {
                 b.BeatmapSet = beatmapSet;
+                b.Metadata.RemoteAudioReference = reference;
 
                 // ensure we aren't trying to add a new ruleset to the database
                 // this can happen in tests, mostly

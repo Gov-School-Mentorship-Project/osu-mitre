@@ -417,8 +417,7 @@ namespace osu.Game.Screens.Select
                 if (!bypassFilters && item.Filtered.Value)
                     return false;
 
-                osu.Framework.Logging.Logger.Log($"Selecting {item.BeatmapInfo.Metadata.Title} which is not the same as {beatmapInfo.Metadata.Title} {item.BeatmapInfo.UseRemoteIfAvailable} {beatmapInfo.UseRemoteIfAvailable}");
-                item.BeatmapInfo.UseRemoteIfAvailable = beatmapInfo.UseRemoteIfAvailable;
+                osu.Framework.Logging.Logger.Log($"Selecting {item.BeatmapInfo.Metadata.Title} from carousel");
                 select(item);
 
                 // if we got here and the set is filtered, it means we were bypassing filters.

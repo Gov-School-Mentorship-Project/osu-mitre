@@ -72,7 +72,7 @@ namespace osu.Game.Overlays
         /// </summary>
         public void ReloadCurrentTrack()
         {
-            changeTrack(true);
+            changeTrack();
             TrackChanged?.Invoke(current, TrackChangeDirection.None);
         }
 
@@ -137,9 +137,17 @@ namespace osu.Game.Overlays
                 UserPauseRequested = false;
 
             if (restart)
+            {
                 CurrentTrack.RestartAsync();
+            }
             else if (!IsPlaying)
+            {
+                if (beatmap.Value.Track == SpotifyManager.Instance.currentTrack)
+                {
+                    SpotifyManager.Instance.Stop();
+                }
                 CurrentTrack.StartAsync();
+            }
 
             return true;
         }
@@ -276,7 +284,7 @@ namespace osu.Game.Overlays
 
         private void changeBeatmap(WorkingBeatmap newWorking)
         {
-            Logger.Log("CHANGE BEATMAP!!!!");
+            Logger.Log($"CHANGE BEATMAP!!!! from {newWorking?.Metadata.Title ?? "None"} to {current?.Metadata.Title ?? "None"}");
             // This method can potentially be triggered multiple times as it is eagerly fired in next() / prev() to ensure correct execution order
             // (changeBeatmap must be called before consumers receive the bindable changed event, which is not the case when the local beatmap bindable is updated directly).
             if (newWorking == current)
@@ -287,6 +295,7 @@ namespace osu.Game.Overlays
             TrackChangeDirection direction = TrackChangeDirection.None;
 
             bool audioEquals = newWorking?.BeatmapInfo?.AudioEquals(current?.BeatmapInfo) == true;
+            Logger.Log($"Audio Equals is... {audioEquals}");
 
             if (current != null)
             {
@@ -307,10 +316,12 @@ namespace osu.Game.Overlays
                 }
             }
 
+            SpotifyManager.Instance.Stop();
+            Logger.Log("Should've stopped the last track...");
             current = newWorking;
 
             if (lastWorking == null || !lastWorking.TryTransferTrack(current))
-                changeTrack(lastWorking?.BeatmapInfo.UseRemoteIfAvailable != newWorking?.BeatmapInfo.UseRemoteIfAvailable);
+                changeTrack();
 
             TrackChanged?.Invoke(current, direction);
 
@@ -324,7 +335,7 @@ namespace osu.Game.Overlays
                 working.Value = current;
         }
 
-        private void changeTrack(bool forceReload)
+        private void changeTrack()
         {
             Logger.Log("CHANGE TRACK!!!!");
             var queuedTrack = getQueuedTrack();
@@ -339,7 +350,7 @@ namespace osu.Game.Overlays
             {
                 lastTrack.VolumeTo(0, 500, Easing.Out).Expire();
 
-                if (queuedTrack == CurrentTrack || forceReload)
+                if (queuedTrack == CurrentTrack)
                 {
                     AddInternal(queuedTrack);
                     queuedTrack.VolumeTo(0).Then().VolumeTo(1, 300, Easing.Out);

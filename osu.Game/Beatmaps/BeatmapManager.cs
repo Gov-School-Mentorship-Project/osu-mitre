@@ -78,8 +78,7 @@ namespace osu.Game.Beatmaps
             workingBeatmapCache = CreateWorkingBeatmapCache(audioManager, gameResources, userResources, defaultBeatmap, host);
         }
 
-        protected virtual WorkingBeatmapCache CreateWorkingBeatmapCache(AudioManager audioManager, IResourceStore<byte[]> resources, IResourceStore<byte[]> storage, WorkingBeatmap? defaultBeatmap,
-                                                                        GameHost? host)
+        protected virtual WorkingBeatmapCache CreateWorkingBeatmapCache(AudioManager audioManager, IResourceStore<byte[]> resources, IResourceStore<byte[]> storage, WorkingBeatmap? defaultBeatmap, GameHost? host)
         {
             return new WorkingBeatmapCache(BeatmapTrackStore, audioManager, resources, storage, defaultBeatmap, host);
         }
@@ -108,7 +107,7 @@ namespace osu.Game.Beatmaps
                 Beatmaps =
                 {
                     new BeatmapInfo(ruleset, new BeatmapDifficulty(), metadata)
-                }
+                },
             };
 
             foreach (BeatmapInfo b in beatmapSet.Beatmaps)

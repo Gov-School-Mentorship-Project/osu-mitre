@@ -100,6 +100,7 @@ namespace osu.Game.Configuration
 
             SetDefault(OsuSetting.RemoteAudioSpotifyClientId, string.Empty);
             SetDefault(OsuSetting.RemoteAudioSpotifyClientSecret, string.Empty);
+            SetDefault(OsuSetting.UseRemoteAudio, true);
             SetDefault(OsuSetting.SpotifyToken, string.Empty);
 
             // Input
@@ -391,6 +392,7 @@ namespace osu.Game.Configuration
         ProfileCoverExpanded,
         RemoteAudioSpotifyClientId,
         RemoteAudioSpotifyClientSecret,
+        UseRemoteAudio,
         SpotifyToken
     }
 }

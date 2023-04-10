@@ -193,6 +193,7 @@ namespace osu.Game.Screens.Play
                         {
                             VisualSettings = new VisualSettings(),
                             AudioSettings = new AudioSettings(),
+                            new RemoteAudioSettings(Beatmap.Value.Track, !String.IsNullOrEmpty(Beatmap.Value.Metadata.AudioFile), (bool useRemote) => Beatmap.Value.LoadTrack(useRemote)),
                             new InputSettings()
                         }
                     },

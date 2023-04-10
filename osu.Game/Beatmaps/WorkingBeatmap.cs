@@ -22,6 +22,7 @@ using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.UI;
 using osu.Game.Skinning;
 using osu.Game.Storyboards;
+using osu.Framework.Allocation;
 
 namespace osu.Game.Beatmaps
 {
@@ -30,6 +31,7 @@ namespace osu.Game.Beatmaps
     {
         public readonly BeatmapInfo BeatmapInfo;
         public readonly BeatmapSetInfo BeatmapSetInfo;
+
 
         // TODO: remove once the fallback lookup is not required (and access via `working.BeatmapInfo.Metadata` directly).
         public BeatmapMetadata Metadata => BeatmapInfo.Metadata;
@@ -51,6 +53,8 @@ namespace osu.Game.Beatmaps
 
         private Track track; // track is not Lazy as we allow transferring and loading multiple times.
         private Waveform waveform; // waveform is also not Lazy as the track may change.
+
+        private bool lastRemoteState = true;
 
         protected WorkingBeatmap(BeatmapInfo beatmapInfo, AudioManager audioManager)
         {
@@ -107,17 +111,21 @@ namespace osu.Game.Beatmaps
 
         public virtual bool TrackLoaded => track != null;
 
-        public Track LoadTrack()
+        public Track LoadTrack() => LoadTrack(lastRemoteState);
+
+        public Track LoadTrack(bool useRemote)
         {
-            Logger.Log("LOAD TRACK!");
+            Logger.Log($"LOAD TRACK! {Beatmap.Metadata.Title} {useRemote} {lastRemoteState}");
+            lastRemoteState = useRemote;
             double start = Beatmap.HitObjects.FirstOrDefault()?.StartTime - 2000 ?? 0;
             if (start < 0)
                 start = 0;
 
-            Logger.Log($"The UseRemoteIfAvailable is {Beatmap.BeatmapInfo.UseRemoteIfAvailable}");
-            if (Beatmap.BeatmapInfo.UseRemoteIfAvailable)
+            track?.Stop();
+            track = null;
+            if (useRemote)
             {
-                Logger.Log("Getting Remote");
+                Logger.Log($"Getting Remote... Reference: {Metadata.RemoteAudioReference}");
                 track = GetRemoteTrack(start);
             }
             if (track == null)
@@ -168,7 +176,7 @@ namespace osu.Game.Beatmaps
         }
 
         /// <summary>
-        /// Get the loaded audio track instance. <see cref="LoadTrack"/> must have first been called.
+        /// Get the loaded audio track instance. <see cref="LoadTrack()"/> must have first been called.
         /// This generally happens via MusicController when changing the global beatmap.
         /// </summary>
         [NotNull]

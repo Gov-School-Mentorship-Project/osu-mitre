@@ -65,6 +65,7 @@ namespace osu.Game.Beatmaps.RemoteAudio
 
         public override void Start()
         {
+            Logger.Log("Start remote track");
             if (Length == 0)
                 return;
 
@@ -73,6 +74,7 @@ namespace osu.Game.Beatmaps.RemoteAudio
 
         public override void Reset()
         {
+            Logger.Log("Reset Remote Track");
             lock (clock) clock.Reset();
             seekOffset = 0;
 
@@ -81,6 +83,7 @@ namespace osu.Game.Beatmaps.RemoteAudio
 
         public override void Stop()
         {
+            Logger.Log("stop remote track");
             lock (clock) clock.Stop();
         }
 
@@ -96,40 +99,39 @@ namespace osu.Game.Beatmaps.RemoteAudio
         {
             get
             {
+                if (clock.IsRunning)
+                {
+                    UpdateState();
+                }
                 lock (clock) return Math.Min(Length, seekOffset + clock.CurrentTime);
             }
         }
 
         protected override void UpdateState()
         {
-            base.UpdateState();
-            Logger.Log($"Updating State! {clock.CurrentTime} {Length} {HasCompleted} {Looping}");
+            //base.UpdateState();
 
             lock (clock)
             {
                 if (clock.IsRunning && clock.CurrentTime + seekOffset >= Length)
                 {
+                    clock.Stop();
                     if (Looping)
                     {
-                        Restart();
+                        Logger.Log($"should reset track?? at {RestartPoint}");
+                        Stop();
+                        Seek(0);
+                        Start();
                     }
                     else
                     {
                         Logger.Log("completed track, should stop now :)");
-                        Stop();
+                        //Stop(); // Make sure to avoid infinite loops
                         RaiseCompleted();
                     }
                 }
             }
         }
-
-        /*internal override void OnStateChanged()
-        {
-            base.OnStateChanged();
-
-            lock (clock)
-                clock.Rate = Rate;
-        }*/
 
         protected override void Dispose(bool disposing)
         {

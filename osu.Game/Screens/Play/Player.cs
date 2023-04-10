@@ -202,6 +202,8 @@ namespace osu.Game.Screens.Play
         {
             // Remote the rate modifying mods if it is a remote track
             originalMods = Mods.Value.Select(m => m.DeepClone()).ToArray();
+            Beatmap.Value.LoadTrack(config.Get<bool>(OsuSetting.UseRemoteAudio));
+            Logger.Log($"Reloaded the track {Beatmap.Value.Metadata.Title}");
             var gameplayMods = Beatmap.Value.Track is RemoteTrack ?
                 Mods.Value.
                     Where(m => m is ModRateAdjust == false).

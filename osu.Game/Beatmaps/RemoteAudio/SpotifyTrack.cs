@@ -19,7 +19,7 @@ namespace osu.Game.Beatmaps.RemoteAudio
 
         public override bool Seek(double seek)
         {
-            Logger.Log($"Seeking to {seek} from SpotifyTrack at {CurrentTime}!! length is {Length}");
+            //Logger.Log($"Seeking to {seek} from SpotifyTrack at {CurrentTime}!! length is {Length}");
 
             if (seek > 0)
             {
@@ -55,7 +55,7 @@ namespace osu.Game.Beatmaps.RemoteAudio
         public override void Stop()
         {
             Logger.Log("STOP!!!");
-            Logger.Log($"Stopping Track {reference} from SpotifyTrack at {CurrentTime}");
+            //Logger.Log($"Stopping Track {reference} from SpotifyTrack at {CurrentTime}");
             base.Stop();
             SpotifyManager.Instance.Stop(this);
         }

@@ -41,9 +41,6 @@ namespace osu.Game.Beatmaps
 
         public BeatmapDifficulty Difficulty { get; set; } = null!;
 
-        [NonSerialized]
-        public bool UseRemoteIfAvailable = true;
-
         public BeatmapMetadata Metadata { get; set; } = null!;
 
         [JsonIgnore]
@@ -203,8 +200,7 @@ namespace osu.Game.Beatmaps
         public bool AudioEquals(BeatmapInfo? other) => other != null
                                                        && BeatmapSet != null
                                                        && other.BeatmapSet != null
-                                                       && other.BeatmapSet.Metadata.RemoteAudioReference == BeatmapSet.Metadata.RemoteAudioReference
-                                                       && other.UseRemoteIfAvailable == UseRemoteIfAvailable
+                                                       && other.Metadata.RemoteAudioReference == Metadata.RemoteAudioReference
                                                        && compareFiles(this, other, m => m.AudioFile);
 
         public bool BackgroundEquals(BeatmapInfo? other) => other != null

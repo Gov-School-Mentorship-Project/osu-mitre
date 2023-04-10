@@ -99,7 +99,7 @@ namespace osu.Game.RemoteAudio
             var request = new PlayerTransferPlaybackRequest(new List<string> { deviceId });
             spotify.Player.TransferPlayback(request, token).ContinueWith(result => {
                 transferedDevice = true;
-                Logger.Log("Dne transfereing device");
+                Logger.Log("Done transfering Device");
             });
         }
 
@@ -116,12 +116,7 @@ namespace osu.Game.RemoteAudio
                 Logger.Log("not playing becasue it is already playing ");
                 Reset();
                 return true;
-            } else
-            {
-                Logger.Log($"Changing from {currentReference} to {reference} at {positionMs}");
             }
-
-            Logger.Log($"Playing {reference} from SpotifyManager");
             CancellationTokenSource cts = new CancellationTokenSource();
             CancellationToken token = cts.Token;
             token.Register(() =>
@@ -133,8 +128,17 @@ namespace osu.Game.RemoteAudio
                 Uris = new List<string> { reference },
                 PositionMs = positionMs,
             };
-            //currentReference = reference;
-            spotify.Player.ResumePlayback(resume, token).ContinueWith(s => {currentReference = reference;});
+            Logger.Log($"Changing from {currentReference} to {reference} at {positionMs}");
+            currentReference = reference;
+            Task.Run(async () => {
+                try {
+                    //spotify.Player.ResumePlayback(resume, token).ContinueWith(s => {currentReference = reference; Logger.Log("done resuming track???");});
+                    await spotify.Player.ResumePlayback(resume, token).ConfigureAwait(false);
+                } catch (SpotifyAPI.Web.APIException e)
+                {
+                    Logger.Log($"Error resuming playback!!! {e.Message}");
+                }
+            });
             return true;
         }
 
@@ -174,6 +178,18 @@ namespace osu.Game.RemoteAudio
             }
 
             Logger.Log($"Pausing track from SpotifyManager");
+            socket.Pause();
+        }
+
+        public void Stop()
+        {
+            if (!transferedDevice || spotify == null)
+            {
+                Logger.Log("Cannot Stop Until Web Device Is Registered");
+                return;
+            }
+
+            Logger.Log($"Pausing unkown track from SpotifyManager");
             socket.Pause();
         }
 
@@ -324,7 +340,10 @@ namespace osu.Game.RemoteAudio
             if (response.ExpiresIn < 0)
                 return;
 
-            SpotifyClientConfig clientConfig = SpotifyClientConfig.CreateDefault().WithAuthenticator(authenticator);
+            SpotifyClientConfig clientConfig = SpotifyClientConfig
+            .CreateDefault()
+            .WithRetryHandler(new SimpleRetryHandler() {RetryAfter = TimeSpan.FromSeconds(1)})
+            .WithAuthenticator(authenticator);
 
             spotify = new SpotifyClient(clientConfig);
             config?.SetValue(OsuSetting.SpotifyToken, e.NewValue.ToString());

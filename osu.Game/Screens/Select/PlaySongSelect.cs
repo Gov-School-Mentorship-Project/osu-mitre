@@ -24,6 +24,7 @@ using osu.Game.Utils;
 using osuTK.Input;
 using osu.Framework.Logging;
 using osu.Game.RemoteAudio;
+using osu.Game.Configuration;
 
 namespace osu.Game.Screens.Select
 {
@@ -33,6 +34,9 @@ namespace osu.Game.Screens.Select
 
         [Resolved]
         private INotificationOverlay? notifications { get; set; }
+
+        [Resolved]
+        private OsuConfigManager config { get; set; } = null!;
 
         public override bool AllowExternalScreenChange => true;
 
@@ -45,17 +49,21 @@ namespace osu.Game.Screens.Select
 
             if (RemoteBeatmapAudio.validateRemoteAudio(beatmap.Metadata.RemoteAudioReference))
             {
-                items.Insert(0, new OsuMenuItem("Play with Remote Audio", MenuItemType.Highlighted, () => FinaliseSelection(beatmap)));
+                items.Insert(0, new OsuMenuItem("Play with Remote Audio", MenuItemType.Highlighted, () => {
+                    config.GetBindable<bool>(OsuSetting.UseRemoteAudio).Disabled = false;
+                    config.SetValue<bool>(OsuSetting.UseRemoteAudio, true);
+                    FinaliseSelection(beatmap);
+                }));
             }
 
             if (beatmap.Metadata.AudioFile != string.Empty)
             {
                 items.Insert(0, new OsuMenuItem("Play with Local Audio", MenuItemType.Highlighted, () =>
                 {
-                    Logger.Log("Playing with local audio and beatmap.UseRemoteIfAvailable = false");
-                    beatmap.UseRemoteIfAvailable = false;
+                    Logger.Log("Playing with local audio");
+                    config.GetBindable<bool>(OsuSetting.UseRemoteAudio).Disabled = false;
+                    config.SetValue<bool>(OsuSetting.UseRemoteAudio, false);
                     FinaliseSelection(beatmap);
-                    music.ReloadCurrentTrack(); // TODO: Check if it works
                 }));
             }
 
