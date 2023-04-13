@@ -138,14 +138,25 @@ namespace osu.Game.Overlays
 
             if (restart)
             {
-                CurrentTrack.RestartAsync();
+                Logger.Log("restart track?");
+                //CurrentTrack.RestartAsync();
+                CurrentTrack.StopAsync().ContinueWith((t) =>
+                {
+                    CurrentTrack.SeekAsync(0);
+                }).ContinueWith((t) =>
+                {
+                    CurrentTrack.StartAsync();
+                });
+
             }
             else if (!IsPlaying)
             {
                 if (beatmap.Value.Track == SpotifyManager.Instance.currentTrack)
                 {
+                    Logger.Log("stop track...");
                     SpotifyManager.Instance.Stop();
                 }
+                Logger.Log("But start...?");
                 CurrentTrack.StartAsync();
             }
 

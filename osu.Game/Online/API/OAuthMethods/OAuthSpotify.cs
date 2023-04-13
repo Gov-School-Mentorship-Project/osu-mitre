@@ -74,9 +74,13 @@ namespace osu.Game.Online.API.OAuthMethods
                 cts.Cancel();
                 await server.Stop().ConfigureAwait(false);
                 return;
+            } catch (HttpRequestException)
+            {
+                Logger.Log("Error getting Spotify access token", level: LogLevel.Error);
+                return;
             }
 
-            Logger.Log($"got access token: {initialResponse.AccessToken}");
+            Logger.Log($"got access token");
 
             Token.Value = new OAuthToken() {
                 AccessToken = initialResponse.AccessToken,
