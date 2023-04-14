@@ -29,6 +29,8 @@ using osu.Game.Users;
 using osu.Game.Utils;
 using osuTK;
 using osuTK.Graphics;
+using osu.Game.RemoteAudio;
+using osu.Game.Beatmaps.RemoteAudio;
 
 namespace osu.Game.Screens.Play
 {
@@ -550,6 +552,42 @@ namespace osu.Game.Screens.Play
                     notificationOverlay?.Post(new MutedNotification());
                     muteWarningShownOnce.Value = true;
                 }
+
+                if (Beatmap.Value.Track.GetType().IsAssignableTo(typeof(RemoteTrack)))
+                {
+                    if (!SpotifyManager.Instance.LoggedIn)
+                    {
+                        notificationOverlay?.Post(new RemoteDisconnectionNotification()
+                        {
+                            Text = @"Remote audio will not play without being logged in.",
+                            Icon = FontAwesome.Solid.Music
+                        });
+                    } else if (!SpotifyManager.Instance.transferedDevice)
+                    {
+                        notificationOverlay?.Post(new RemoteDisconnectionNotification()
+                        {
+                            Text = @"Remote audio will not play without the webpage being connected.",
+                            Icon = FontAwesome.Solid.Music
+                        });
+                    }
+                }
+            }
+        }
+
+        private partial class RemoteDisconnectionNotification : SimpleNotification
+        {
+            public override bool IsImportant => true;
+
+            public RemoteDisconnectionNotification()
+            {
+                Text = "Remote audio is not set up to play audio";
+            }
+
+            [BackgroundDependencyLoader]
+            private void load(OsuColour colours)
+            {
+                Icon = FontAwesome.Solid.Music;
+                IconContent.Colour = colours.RedDark;
             }
         }
 

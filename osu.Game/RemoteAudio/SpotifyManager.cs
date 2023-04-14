@@ -326,7 +326,7 @@ namespace osu.Game.RemoteAudio
 
             authenticator.TokenRefreshed += (sender, response) =>
             {
-                Logger.Log("PKCE Token Refreshed!!!");
+                Logger.Log("PKCE Token Refreshed!!! Is the button updated???");
                 if (authentication == null)
                     return;
 
@@ -353,7 +353,6 @@ namespace osu.Game.RemoteAudio
                 LoginStateUpdated?.Invoke(LoginState.Loading, string.Empty);
                 spotifyUsername = await GetName().ConfigureAwait(true);
                 Logger.Log($"Logged in with spotify username {spotifyUsername}");
-
 
                 if (spotifyUsername == null)
                 {

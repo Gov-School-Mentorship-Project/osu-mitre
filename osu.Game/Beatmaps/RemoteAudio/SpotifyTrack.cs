@@ -13,7 +13,6 @@ namespace osu.Game.Beatmaps.RemoteAudio
         {
             Logger.Log($"Creating Track: {reference}");
             AggregateVolume.BindValueChanged(SpotifyManager.Instance.VolumeChanged);
-            base.StartAsync();
             Completed += Stop;
         }
 
